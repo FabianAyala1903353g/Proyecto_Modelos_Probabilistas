@@ -165,6 +165,20 @@
             color: #d32f2f;
             font-weight: bold;
         }
+
+        .calculos {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .calculos div {
+            margin: 3px 0;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -276,15 +290,36 @@
             const vars = Object.keys(red.cpts);
             const ocultas = vars.filter(v => v !== query && !evidencia.hasOwnProperty(v));
             
+            let pasos = [];
+            pasos.push('<strong>Variables:</strong> ' + vars.join(', '));
+            pasos.push('<strong>Query:</strong> ' + query);
+            pasos.push('<strong>Evidencia:</strong> ' + (Object.keys(evidencia).length > 0 ? Object.keys(evidencia).map(k => k + '=' + evidencia[k]).join(', ') : 'ninguna'));
+            pasos.push('<strong>Variables ocultas:</strong> ' + ocultas.join(', '));
+            pasos.push('<br><strong>Calculando P(' + query + '=true | evidencia):</strong>');
+            
+            let numComb = 0;
+            
             function enumerar(vs, asig) {
                 if (vs.length === 0) {
+                    numComb++;
                     let prob = 1;
+                    let terminos = [];
+                    
                     for (let v of vars) {
                         const padres = red.estructura[v] || [];
                         const vals = padres.map(p => asig[p]);
                         const key = vals.length > 0 ? vals.join(',') : 'prior';
-                        prob *= red.cpts[v][key][asig[v] ? 1 : 0];
+                        const p = red.cpts[v][key][asig[v] ? 1 : 0];
+                        prob *= p;
+                        
+                        const padresStr = padres.length > 0 ? '|' + padres.map(pp => pp + '=' + asig[pp]).join(',') : '';
+                        terminos.push('P(' + v + '=' + asig[v] + padresStr + ')=' + p.toExponential(2));
                     }
+                    
+                    pasos.push('Comb ' + numComb + ': ' + ocultas.map(v => v + '=' + asig[v]).join(', '));
+                    pasos.push('  ' + terminos.join(' × '));
+                    pasos.push('  = ' + prob.toExponential(3));
+                    
                     return prob;
                 }
                 
@@ -296,17 +331,24 @@
                 return suma;
             }
             
-            const inicio = performance.now();
             const pTrue = enumerar(ocultas, { ...evidencia, [query]: true });
+            pasos.push('<br><strong>Suma total para ' + query + '=true: ' + pTrue.toExponential(3) + '</strong>');
+            
+            pasos.push('<br><strong>Calculando P(' + query + '=false | evidencia):</strong>');
+            numComb = 0;
             const pFalse = enumerar(ocultas, { ...evidencia, [query]: false });
-            const tiempo = performance.now() - inicio;
+            pasos.push('<br><strong>Suma total para ' + query + '=false: ' + pFalse.toExponential(3) + '</strong>');
             
             const total = pTrue + pFalse;
+            pasos.push('<br><strong>Normalización:</strong>');
+            pasos.push('Total = ' + pTrue.toExponential(3) + ' + ' + pFalse.toExponential(3) + ' = ' + total.toExponential(3));
+            pasos.push('P(' + query + '=true) = ' + (pTrue/total).toFixed(4));
+            pasos.push('P(' + query + '=false) = ' + (pFalse/total).toFixed(4));
             
             return {
                 true: pTrue / total,
                 false: pFalse / total,
-                tiempo: tiempo.toFixed(2)
+                pasos: pasos
             };
         }
 
@@ -329,22 +371,15 @@
             const evStr = Object.keys(evidencia).length > 0 ? 
                 Object.keys(evidencia).join(', ') : 'ninguna';
             
-            contenido.innerHTML = `
-                <div class="result-item">
-                    <strong>Consulta:</strong> P(${query} | ${evStr})
-                </div>
-                <div class="result-item">
-                    P(${query} = true | evidencia) = 
-                    <span class="prob-true">${(resultado.true * 100).toFixed(2)}%</span>
-                </div>
-                <div class="result-item">
-                    P(${query} = false | evidencia) = 
-                    <span class="prob-false">${(resultado.false * 100).toFixed(2)}%</span>
-                </div>
-                <div class="result-item" style="margin-top: 15px; font-size: 12px; color: #666;">
-                    Tiempo: ${resultado.tiempo} ms
-                </div>
-            `;
+            const calculosHtml = resultado.pasos.map(p => '<div>' + p + '</div>').join('');
+            
+            contenido.innerHTML = 
+                '<div class="result-item"><strong>Consulta:</strong> P(' + query + ' | ' + evStr + ')</div>' +
+                '<h4 style="margin-top: 15px; color: #0A0A0A;">Proceso de cálculo:</h4>' +
+                '<div class="calculos">' + calculosHtml + '</div>' +
+                '<h4 style="margin-top: 15px; color: #0A0A0A;">Resultado final:</h4>' +
+                '<div class="result-item">P(' + query + ' = true | evidencia) = <span class="prob-true">' + (resultado.true * 100).toFixed(2) + '%</span></div>' +
+                '<div class="result-item">P(' + query + ' = false | evidencia) = <span class="prob-false">' + (resultado.false * 100).toFixed(2) + '%</span></div>';
             
             div.classList.add('show');
         }
