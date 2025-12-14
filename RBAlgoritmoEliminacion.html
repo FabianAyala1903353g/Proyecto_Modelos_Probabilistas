@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algoritmo 2: Eliminación de Variables</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #0A0A0A;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 5px;
+        }
+
+        .section h2 {
+            color: #0A0A0A;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .network-viz {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .node {
+            display: inline-block;
+            margin: 10px 15px;
+        }
+
+        .node-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            margin: 0 auto;
+        }
+
+        .node-label {
+            margin-top: 5px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .controls {
+            margin: 15px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #0A0A0A;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .checkbox-group {
+            margin: 15px 0;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            margin-right: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #0A0A0A;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            background: #1a1a1a;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results h3 {
+            color: #0A0A0A;
+            margin-bottom: 10px;
+        }
+
+        .result-item {
+            margin: 10px 0;
+        }
+
+        .prob-true {
+            color: #0A0A0A;
+            font-weight: bold;
+        }
+
+        .prob-false {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+
+        .info {
+            background: #fff9c4;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .calculos {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .calculos div {
+            margin: 3px 0;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Algoritmo 2: Eliminación de Variables</h1>
+        <p class="subtitle">Redes Bayesianas</p>
+        <div class="section">
+            <h2>Red Bayesiana: Alarma-Terremoto-Robo</h2>
+            <div class="network-viz">
+                <div style="margin-bottom: 30px;">
+                    <div class="node">
+                        <div class="node-circle" style="background: #0A0A0A;">Terremoto</div>
+                        <div class="node-label">P = 0.002</div>
+                    </div>
+                    <div class="node">
+                        <div class="node-circle" style="background: #0A0A0A;">Robo</div>
+                        <div class="node-label">P = 0.001</div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 30px;">
+                    <div class="node">
+                        <div class="node-circle" style="background: #555;">Alarma</div>
+                        <div class="node-label">Depende de T, R</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="node">
+                        <div class="node-circle" style="background: #888;">Juan Llama</div>
+                        <div class="node-label">Depende de A</div>
+                    </div>
+                    <div class="node">
+                        <div class="node-circle" style="background: #888;">María Llama</div>
+                        <div class="node-label">Depende de A</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Configuración</h2>
+            
+            <div class="controls">
+                <label>Variable a Consultar:</label>
+                <select id="query-var">
+                    <option value="Robo">Robo</option>
+                    <option value="Terremoto">Terremoto</option>
+                    <option value="Alarma">Alarma</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Evidencia:</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="ev-juan" checked>
+                        Juan llamó
+                    </label>
+                    <label>
+                        <input type="checkbox" id="ev-maria" checked>
+                        María llamó
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn" onclick="ejecutar()">Ejecutar Algoritmo</button>
+        </div>
+
+        <div id="resultados" class="results">
+            <h3>Resultados</h3>
+            <div id="contenido"></div>
+        </div>
+    </div>
+
+    <script>
+        function allBooleanAssignments(n) {
+            if (n === 0) return [[]];
+            const prev = allBooleanAssignments(n - 1);
+            const out = [];
+            for (const p of prev) {
+                out.push([...p, false]);
+                out.push([...p, true]);
+            }
+            return out;
+        }
+
+        const fmt = (x) => (typeof x === "number" ? x.toExponential(3) : String(x));
+
+        function buildKey(scope, asig) {
+            if (!scope || scope.length === 0) return "const";
+            return scope.map(v => v + ':' + asig[v]).join(",");
+        }
+
+        function checkValueDefined(val, ctx) {
+            if (typeof val !== "number" || Number.isNaN(val)) {
+                throw new Error('Valor indefinido en factor: ' + ctx);
+            }
+            return val;
+        }
+
+        function restrictFactor(f, evVar, evVal) {
+            if (!f.scope.includes(evVar)) return f;
+
+            const newScope = f.scope.filter(v => v !== evVar);
+            const tabla = {};
+            const combos = allBooleanAssignments(newScope.length);
+
+            for (const combo of combos) {
+                const asig = {};
+                newScope.forEach((v, i) => asig[v] = combo[i]);
+                const full = { ...asig, [evVar]: evVal };
+                const oldKey = buildKey(f.scope, full);
+                tabla[buildKey(newScope, asig)] = checkValueDefined(f.tabla[oldKey], 'restrict lookup ' + oldKey + ' en [' + f.name + ']');
+            }
+
+            return { name: f.name + '|' + evVar + '=' + evVal, scope: newScope, tabla };
+        }
+
+        function multiplyFactors(f1, f2) {
+            const scope = [...f1.scope];
+            for (const v of f2.scope) if (!scope.includes(v)) scope.push(v);
+
+            const tabla = {};
+            const combos = allBooleanAssignments(scope.length);
+
+            for (const combo of combos) {
+                const asig = {};
+                scope.forEach((v, i) => asig[v] = combo[i]);
+
+                const k1 = buildKey(f1.scope, asig);
+                const k2 = buildKey(f2.scope, asig);
+
+                const v1 = checkValueDefined(f1.tabla[k1], 'lookup ' + k1 + ' en [' + f1.name + ']');
+                const v2 = checkValueDefined(f2.tabla[k2], 'lookup ' + k2 + ' en [' + f2.name + ']');
+
+                tabla[buildKey(scope, asig)] = v1 * v2;
+            }
+
+            return { name: '(' + f1.name + '×' + f2.name + ')', scope, tabla };
+        }
+
+        function sumOut(f, variable) {
+            const newScope = f.scope.filter(v => v !== variable);
+            const tabla = {};
+            const combos = allBooleanAssignments(newScope.length);
+
+            for (const combo of combos) {
+                const asig = {};
+                newScope.forEach((v, i) => asig[v] = combo[i]);
+
+                let s = 0;
+                for (const vBool of [false, true]) {
+                    const full = { ...asig, [variable]: vBool };
+                    const k = buildKey(f.scope, full);
+                    s += checkValueDefined(f.tabla[k], 'sumOut lookup ' + k + ' en [' + f.name + ']');
+                }
+                tabla[buildKey(newScope, asig)] = s;
+            }
+
+            return { name: 'Σ_' + variable + '[' + f.name + ']', scope: newScope, tabla };
+        }
+
+        const red = {
+            estructura: {
+                'Terremoto': [],
+                'Robo': [],
+                'Alarma': ['Terremoto', 'Robo'],
+                'LlamaJuan': ['Alarma'],
+                'LlamaMaria': ['Alarma']
+            },
+            cpts: {
+                'Terremoto': { 'prior': [0.998, 0.002] },
+                'Robo': { 'prior': [0.999, 0.001] },
+                'Alarma': {
+                    'false,false': [0.999, 0.001],
+                    'false,true': [0.06, 0.94],
+                    'true,false': [0.71, 0.29],
+                    'true,true': [0.05, 0.95]
+                },
+                'LlamaJuan': {
+                    'false': [0.95, 0.05],
+                    'true': [0.10, 0.90]
+                },
+                'LlamaMaria': {
+                    'false': [0.99, 0.01],
+                    'true': [0.30, 0.70]
+                }
+            }
+        };
+
+        function crearFactorDesdeCPT(variable) {
+            const padres = red.estructura[variable] || [];
+            const scope = [variable, ...padres];
+            const tabla = {};
+
+            const parentAssignments = allBooleanAssignments(padres.length);
+
+            for (const pCombo of parentAssignments) {
+                const parentKey = padres.length > 0 ? pCombo.map(v => String(v)).join(",") : "prior";
+                const dist = red.cpts[variable][parentKey];
+                if (!dist) throw new Error('Falta CPT para ' + variable + ' con clave de padres: "' + parentKey + '"');
+
+                for (const val of [false, true]) {
+                    const asig = { [variable]: val };
+                    padres.forEach((p, i) => asig[p] = pCombo[i]);
+                    tabla[buildKey(scope, asig)] = dist[val ? 1 : 0];
+                }
+            }
+
+            return { name: variable, scope, tabla };
+        }
+
+        function eliminateWithDetail(factoresRelevantes, z, pasos) {
+            const allVars = [...new Set(factoresRelevantes.flatMap(f => f.scope))];
+            const newScope = allVars.filter(v => v !== z);
+
+            const combos = allBooleanAssignments(newScope.length);
+            const newTabla = {};
+
+            for (const combo of combos) {
+                const asig = {};
+                newScope.forEach((v, i) => asig[v] = combo[i]);
+
+                const asigStr = newScope.length ? newScope.map(v => v + '=' + asig[v]).join(", ") : "(constante)";
+                pasos.push('Para ' + asigStr + ':');
+
+                let suma = 0;
+
+                for (const zVal of [false, true]) {
+                    const full = { ...asig, [z]: zVal };
+
+                    let producto = 1;
+                    const terminos = [];
+
+                    for (const f of factoresRelevantes) {
+                        const k = buildKey(f.scope, full);
+                        const v = checkValueDefined(f.tabla[k], 'lookup ' + k + ' en [' + f.name + ']');
+                        producto *= v;
+                        terminos.push(fmt(v));
+                    }
+
+                    suma += producto;
+                    pasos.push('  ' + z + '=' + zVal + ': ' + terminos.join(' × ') + ' = ' + fmt(producto));
+                }
+
+                newTabla[buildKey(newScope, asig)] = suma;
+                pasos.push('  Suma total = ' + fmt(suma));
+            }
+
+            return { name: 'Σ_' + z + '(' + factoresRelevantes.map(f => f.name).join('×') + ')', scope: newScope, tabla: newTabla };
+        }
+
+        function eliminacion(query, evidencia) {
+            const vars = Object.keys(red.cpts);
+            const ocultas = vars.filter(v => v !== query && !Object.prototype.hasOwnProperty.call(evidencia, v));
+
+            const pasos = [];
+            pasos.push('<strong>Paso 1: Crear factores iniciales</strong>');
+
+            let factores = vars.map(v => crearFactorDesdeCPT(v));
+            for (const f of factores) {
+                pasos.push('Factor [' + f.name + '] variables [' + f.scope.join(", ") + ']: ' + Object.keys(f.tabla).length + ' entradas');
+            }
+
+            pasos.push('<br><strong>Paso 2: Reducir factores con evidencia</strong>');
+            const evKeys = Object.keys(evidencia);
+            pasos.push(evKeys.length ? 'Evidencia: ' + evKeys.map(k => k + '=' + evidencia[k]).join(", ") : 'Sin evidencia');
+
+            for (const evVar of evKeys) {
+                const evVal = evidencia[evVar];
+                factores = factores.map(f => {
+                    if (!f.scope.includes(evVar)) return f;
+
+                    const nf = restrictFactor(f, evVar, evVal);
+                    pasos.push('Reducir [' + f.name + '] por ' + evVar + '=' + evVal + ' → variables [' + (nf.scope.join(", ") || "constante") + ']');
+                    return nf;
+                });
+            }
+
+            pasos.push('<br><strong>Paso 3: Eliminar variables ocultas</strong>');
+            pasos.push('Variables a eliminar: ' + (ocultas.join(", ") || "(ninguna)"));
+
+            for (const z of ocultas) {
+                const relevantes = factores.filter(f => f.scope.includes(z));
+                factores = factores.filter(f => !f.scope.includes(z));
+                if (relevantes.length === 0) continue;
+
+                pasos.push('<br><strong>Eliminando variable: ' + z + '</strong>');
+
+                const nuevo = eliminateWithDetail(relevantes, z, pasos);
+                pasos.push('Nuevo factor creado: [' + nuevo.name + '] variables [' + (nuevo.scope.join(", ") || "constante") + ']');
+                factores.push(nuevo);
+            }
+
+            pasos.push('<br><strong>Paso 4: Multiplicar factores restantes y normalizar</strong>');
+
+            let finalFactor = factores[0];
+            for (let i = 1; i < factores.length; i++) finalFactor = multiplyFactors(finalFactor, factores[i]);
+
+            for (const v of [...finalFactor.scope]) {
+                if (v !== query) {
+                    finalFactor = sumOut(finalFactor, v);
+                }
+            }
+
+            const kFalse = buildKey([query], { [query]: false });
+            const kTrue = buildKey([query], { [query]: true });
+
+            const pFalse = checkValueDefined(finalFactor.tabla[kFalse], 'final ' + kFalse);
+            const pTrue = checkValueDefined(finalFactor.tabla[kTrue], 'final ' + kTrue);
+            const total = pFalse + pTrue;
+
+            pasos.push('P(' + query + '=false) sin normalizar = ' + fmt(pFalse));
+            pasos.push('P(' + query + '=true) sin normalizar = ' + fmt(pTrue));
+            pasos.push('Total = ' + fmt(total));
+            pasos.push('Normalizado: P(' + query + '=true|evid) = ' + (pTrue / total).toFixed(5));
+
+            return { true: pTrue / total, false: pFalse / total, pasos };
+        }
+
+        function ejecutar() {
+            const query = document.getElementById("query-var").value;
+            const evidencia = {};
+
+            if (document.getElementById("ev-juan").checked) evidencia["LlamaJuan"] = true;
+            if (document.getElementById("ev-maria").checked) evidencia["LlamaMaria"] = true;
+
+            let resultado;
+            try {
+                resultado = eliminacion(query, evidencia);
+            } catch (err) {
+                const div = document.getElementById("resultados");
+                const contenido = document.getElementById("contenido");
+                contenido.innerHTML = '<div style="color:#b00020;"><strong>Error:</strong> ' + err.message + '</div>';
+                div.classList.add("show");
+                return;
+            }
+
+            const div = document.getElementById("resultados");
+            const contenido = document.getElementById("contenido");
+
+            const evStr = Object.keys(evidencia).length ? Object.keys(evidencia).join(", ") : "ninguna";
+            const calculosHtml = resultado.pasos.map(p => '<div>' + p + '</div>').join("");
+
+            contenido.innerHTML = 
+                '<div class="result-item"><strong>Consulta:</strong> P(' + query + ' | ' + evStr + ')</div>' +
+                '<h4 style="margin-top: 15px; color: #0A0A0A;">Proceso de cálculo:</h4>' +
+                '<div class="calculos">' + calculosHtml + '</div>' +
+                '<h4 style="margin-top: 15px; color: #0A0A0A;">Resultado final:</h4>' +
+                '<div class="result-item">P(' + query + ' = true | evidencia) = <span class="prob-true">' + (resultado.true * 100).toFixed(2) + '%</span></div>' +
+                '<div class="result-item">P(' + query + ' = false | evidencia) = <span class="prob-false">' + (resultado.false * 100).toFixed(2) + '%</span></div>';
+
+            div.classList.add("show");
+        }
+    </script>
+</body>
+</html>
