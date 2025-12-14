@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algoritmo 1: Enumeración</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #0A0A0A;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 5px;
+        }
+
+        .section h2 {
+            color: #0A0A0A;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .network-viz {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .node {
+            display: inline-block;
+            margin: 10px 15px;
+        }
+
+        .node-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            margin: 0 auto;
+        }
+
+        .node-label {
+            margin-top: 5px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .controls {
+            margin: 15px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #0A0A0A;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .checkbox-group {
+            margin: 15px 0;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            margin-right: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #0A0A0A;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            background: #1a1a1a;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results h3 {
+            color: #0A0A0A;
+            margin-bottom: 10px;
+        }
+
+        .result-item {
+            margin: 10px 0;
+        }
+
+        .prob-true {
+            color: #0A0A0A;
+            font-weight: bold;
+        }
+
+        .prob-false {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Algoritmo 1: Enumeración para Inferencia Exacta</h1>
+        <p class="subtitle">Redes Bayesianas</p>
+
+        <div class="section">
+            <h2>Red Bayesiana: Alarma-Terremoto-Robo</h2>
+            <div class="network-viz">
+                <div style="margin-bottom: 30px;">
+                    <div class="node">
+                        <div class="node-circle" style="background: #0A0A0A;">Terremoto</div>
+                        <div class="node-label">P = 0.002</div>
+                    </div>
+                    <div class="node">
+                        <div class="node-circle" style="background: #0A0A0A;">Robo</div>
+                        <div class="node-label">P = 0.001</div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 30px;">
+                    <div class="node">
+                        <div class="node-circle" style="background: #555;">Alarma</div>
+                        <div class="node-label">Depende de T, L</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="node">
+                        <div class="node-circle" style="background: #888;">Juan Llama</div>
+                        <div class="node-label">Depende de A</div>
+                    </div>
+                    <div class="node">
+                        <div class="node-circle" style="background: #888;">María Llama</div>
+                        <div class="node-label">Depende de A</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Configuración</h2>
+            
+            <div class="controls">
+                <label>Variable a Consultar:</label>
+                <select id="query-var">
+                    <option value="Robo">Robo</option>
+                    <option value="Terremoto">Terremoto</option>
+                    <option value="Alarma">Alarma</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Evidencia:</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="ev-juan" checked>
+                        Juan llamó
+                    </label>
+                    <label>
+                        <input type="checkbox" id="ev-maria" checked>
+                        María llamó
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn" onclick="ejecutar()">Ejecutar Algoritmo</button>
+        </div>
+
+        <div id="resultados" class="results">
+            <h3>Resultados</h3>
+            <div id="contenido"></div>
+        </div>
+    </div>
+
+    <script>
+        const red = {
+            estructura: {
+                'Terremoto': [],
+                'Robo': [],
+                'Alarma': ['Terremoto', 'Robo'],
+                'LlamaJuan': ['Alarma'],
+                'LlamaMaria': ['Alarma']
+            },
+            cpts: {
+                'Terremoto': {
+                    'prior': [0.998, 0.002]
+                },
+                'Robo': {
+                    'prior': [0.999, 0.001]
+                },
+                'Alarma': {
+                    'false,false': [0.999, 0.001],
+                    'false,true': [0.06, 0.94],
+                    'true,false': [0.71, 0.29],
+                    'true,true': [0.05, 0.95]
+                },
+                'LlamaJuan': {
+                    'false': [0.95, 0.05],
+                    'true': [0.1, 0.9]
+                },
+                'LlamaMaria': {
+                    'false': [0.99, 0.01],
+                    'true': [0.3, 0.7]
+                }
+            }
+        };
+
+        function enumeracion(red, query, evidencia) {
+            const vars = Object.keys(red.cpts);
+            const ocultas = vars.filter(v => v !== query && !evidencia.hasOwnProperty(v));
+            
+            function enumerar(vs, asig) {
+                if (vs.length === 0) {
+                    let prob = 1;
+                    for (let v of vars) {
+                        const padres = red.estructura[v] || [];
+                        const vals = padres.map(p => asig[p]);
+                        const key = vals.length > 0 ? vals.join(',') : 'prior';
+                        prob *= red.cpts[v][key][asig[v] ? 1 : 0];
+                    }
+                    return prob;
+                }
+                
+                const Y = vs[0];
+                const resto = vs.slice(1);
+                let suma = 0;
+                suma += enumerar(resto, { ...asig, [Y]: true });
+                suma += enumerar(resto, { ...asig, [Y]: false });
+                return suma;
+            }
+            
+            const inicio = performance.now();
+            const pTrue = enumerar(ocultas, { ...evidencia, [query]: true });
+            const pFalse = enumerar(ocultas, { ...evidencia, [query]: false });
+            const tiempo = performance.now() - inicio;
+            
+            const total = pTrue + pFalse;
+            
+            return {
+                true: pTrue / total,
+                false: pFalse / total,
+                tiempo: tiempo.toFixed(2)
+            };
+        }
+
+        function ejecutar() {
+            const query = document.getElementById('query-var').value;
+            const evidencia = {};
+            
+            if (document.getElementById('ev-juan').checked) {
+                evidencia['LlamaJuan'] = true;
+            }
+            if (document.getElementById('ev-maria').checked) {
+                evidencia['LlamaMaria'] = true;
+            }
+            
+            const resultado = enumeracion(red, query, evidencia);
+            
+            const div = document.getElementById('resultados');
+            const contenido = document.getElementById('contenido');
+            
+            const evStr = Object.keys(evidencia).length > 0 ? 
+                Object.keys(evidencia).join(', ') : 'ninguna';
+            
+            contenido.innerHTML = `
+                <div class="result-item">
+                    <strong>Consulta:</strong> P(${query} | ${evStr})
+                </div>
+                <div class="result-item">
+                    P(${query} = true | evidencia) = 
+                    <span class="prob-true">${(resultado.true * 100).toFixed(2)}%</span>
+                </div>
+                <div class="result-item">
+                    P(${query} = false | evidencia) = 
+                    <span class="prob-false">${(resultado.false * 100).toFixed(2)}%</span>
+                </div>
+                <div class="result-item" style="margin-top: 15px; font-size: 12px; color: #666;">
+                    Tiempo: ${resultado.tiempo} ms
+                </div>
+            `;
+            
+            div.classList.add('show');
+        }
+    </script>
+</body>
+</html>
