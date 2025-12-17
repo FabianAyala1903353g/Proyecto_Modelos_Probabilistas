@@ -292,32 +292,45 @@
             <button class="btn-edit" onclick="toggleEditor()">Editar Probabilidades</button>
 
             <div class="network-viz">
-                <div style="margin-bottom: 30px;">
-                    <div class="node">
-                        <div class="node-circle" style="background: #0A0A0A;">Terremoto</div>
-                        <div class="node-label">P = <span id="display-t">0.002</span></div>
-                    </div>
-                    <div class="node">
-                        <div class="node-circle" style="background: #0A0A0A;">Robo</div>
-                        <div class="node-label">P = <span id="display-r">0.001</span></div>
-                    </div>
-                </div>
-                <div style="margin-bottom: 30px;">
-                    <div class="node">
-                        <div class="node-circle" style="background: #555;">Alarma</div>
-                        <div class="node-label">Depende de T, R</div>
-                    </div>
-                </div>
-                <div>
-                    <div class="node">
-                        <div class="node-circle" style="background: #888;">Juan Llama</div>
-                        <div class="node-label">Depende de A</div>
-                    </div>
-                    <div class="node">
-                        <div class="node-circle" style="background: #888;">María Llama</div>
-                        <div class="node-label">Depende de A</div>
-                    </div>
-                </div>
+                <svg viewBox="0 0 800 400" style="width: 100%; height: 400px;">
+                    <!-- Definir marcador de flecha -->
+                    <defs>
+                        <marker id="arrowhead-elim" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="#666" />
+                        </marker>
+                    </defs>
+                    
+                    <!-- Flechas -->
+                    <path d="M 200 80 L 380 180" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead-elim)" />
+                    <path d="M 600 80 L 420 180" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead-elim)" />
+                    <path d="M 370 240 L 280 320" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead-elim)" />
+                    <path d="M 430 240 L 520 320" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead-elim)" />
+                    
+                    <!-- Nodo Terremoto -->
+                    <circle cx="200" cy="60" r="40" fill="#0A0A0A" stroke="#fff" stroke-width="3" />
+                    <text x="200" y="65" fill="white" font-size="12" font-weight="bold" text-anchor="middle">Terremoto</text>
+                    <text x="200" y="115" fill="#666" font-size="11" text-anchor="middle">P = <tspan id="display-t">0.002</tspan></text>
+                    
+                    <!-- Nodo Robo -->
+                    <circle cx="600" cy="60" r="40" fill="#0A0A0A" stroke="#fff" stroke-width="3" />
+                    <text x="600" y="65" fill="white" font-size="12" font-weight="bold" text-anchor="middle">Robo</text>
+                    <text x="600" y="115" fill="#666" font-size="11" text-anchor="middle">P = <tspan id="display-r">0.001</tspan></text>
+                    
+                    <!-- Nodo Alarma -->
+                    <circle cx="400" cy="200" r="40" fill="#555" stroke="#fff" stroke-width="3" />
+                    <text x="400" y="205" fill="white" font-size="12" font-weight="bold" text-anchor="middle">Alarma</text>
+                    <text x="400" y="255" fill="#666" font-size="11" text-anchor="middle">Depende de T, R</text>
+                    
+                    <!-- Nodo Juan -->
+                    <circle cx="250" cy="340" r="40" fill="#888" stroke="#fff" stroke-width="3" />
+                    <text x="250" y="345" fill="white" font-size="12" font-weight="bold" text-anchor="middle">Juan</text>
+                    <text x="250" y="390" fill="#666" font-size="11" text-anchor="middle">Depende de A</text>
+                    
+                    <!-- Nodo María -->
+                    <circle cx="550" cy="340" r="40" fill="#888" stroke="#fff" stroke-width="3" />
+                    <text x="550" y="345" fill="white" font-size="12" font-weight="bold" text-anchor="middle">María</text>
+                    <text x="550" y="390" fill="#666" font-size="11" text-anchor="middle">Depende de A</text>
+                </svg>
             </div>
 
             <div id="editor" class="editor">
@@ -705,8 +718,30 @@
 
             return { true: pTrue / total, false: pFalse / total, pasos };
         }
-
+        
         function ejecutar() {
+            // Validar que todos los valores estén entre 0 y 1
+            const inputs = [
+                document.getElementById('p-terremoto'),
+                document.getElementById('p-robo'),
+                document.getElementById('p-a-ff'),
+                document.getElementById('p-a-ft'),
+                document.getElementById('p-a-tf'),
+                document.getElementById('p-a-tt'),
+                document.getElementById('p-j-f'),
+                document.getElementById('p-j-t'),
+                document.getElementById('p-m-f'),
+                document.getElementById('p-m-t')
+            ];
+
+            for (let input of inputs) {
+                const valor = parseFloat(input.value);
+                if (valor < 0 || valor > 1 || isNaN(valor)) {
+                    alert('Error: Todos los valores de probabilidad deben estar entre 0 y 1');
+                    return;
+                }
+            }
+
             actualizarRed();
             
             const query = document.getElementById("query-var").value;
