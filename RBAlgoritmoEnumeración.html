@@ -179,6 +179,79 @@
             margin: 3px 0;
             line-height: 1.4;
         }
+
+        .editor {
+            background: #fff9c4;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .editor.show {
+            display: block;
+        }
+
+        .editor h3 {
+            color: #0A0A0A;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .editor-group {
+            margin: 15px 0;
+        }
+
+        .editor-group h4 {
+            color: #0A0A0A;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .editor-field {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .editor-field label {
+            flex: 1;
+            font-weight: normal;
+            font-size: 13px;
+        }
+
+        .editor-field input {
+            width: 100px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .btn-edit {
+            padding: 8px 16px;
+            background: #fff9c4;
+            color: #0A0A0A;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .btn-edit:hover {
+            background: #fff59d;
+        }
     </style>
 </head>
 <body>
@@ -188,21 +261,24 @@
 
         <div class="section">
             <h2>Red Bayesiana: Alarma-Terremoto-Robo</h2>
+            
+            <button class="btn-edit" onclick="toggleEditor()">Editar Probabilidades</button>
+
             <div class="network-viz">
                 <div style="margin-bottom: 30px;">
                     <div class="node">
                         <div class="node-circle" style="background: #0A0A0A;">Terremoto</div>
-                        <div class="node-label">P = 0.002</div>
+                        <div class="node-label">P = <span id="display-t">0.002</span></div>
                     </div>
                     <div class="node">
                         <div class="node-circle" style="background: #0A0A0A;">Robo</div>
-                        <div class="node-label">P = 0.001</div>
+                        <div class="node-label">P = <span id="display-r">0.001</span></div>
                     </div>
                 </div>
                 <div style="margin-bottom: 30px;">
                     <div class="node">
                         <div class="node-circle" style="background: #555;">Alarma</div>
-                        <div class="node-label">Depende de T, L</div>
+                        <div class="node-label">Depende de T, R</div>
                     </div>
                 </div>
                 <div>
@@ -216,10 +292,66 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="section">
-            <h2>Configuración</h2>
+            <div id="editor" class="editor">
+                <h3>Editor de Probabilidades</h3>
+                
+                <div class="editor-group">
+                    <h4>Probabilidades Previas</h4>
+                    <div class="editor-field">
+                        <label>P(Terremoto = true):</label>
+                        <input type="number" id="p-terremoto" step="0.001" min="0" max="1" value="0.002">
+                    </div>
+                    <div class="editor-field">
+                        <label>P(Robo = true):</label>
+                        <input type="number" id="p-robo" step="0.001" min="0" max="1" value="0.001">
+                    </div>
+                </div>
+
+                <div class="editor-group">
+                    <h4>P(Alarma = true | Terremoto, Robo)</h4>
+                    <div class="editor-field">
+                        <label>T=false, R=false:</label>
+                        <input type="number" id="p-a-ff" step="0.01" min="0" max="1" value="0.001">
+                    </div>
+                    <div class="editor-field">
+                        <label>T=false, R=true:</label>
+                        <input type="number" id="p-a-ft" step="0.01" min="0" max="1" value="0.94">
+                    </div>
+                    <div class="editor-field">
+                        <label>T=true, R=false:</label>
+                        <input type="number" id="p-a-tf" step="0.01" min="0" max="1" value="0.29">
+                    </div>
+                    <div class="editor-field">
+                        <label>T=true, R=true:</label>
+                        <input type="number" id="p-a-tt" step="0.01" min="0" max="1" value="0.95">
+                    </div>
+                </div>
+
+                <div class="editor-group">
+                    <h4>P(Juan Llama = true | Alarma)</h4>
+                    <div class="editor-field">
+                        <label>Alarma = false:</label>
+                        <input type="number" id="p-j-f" step="0.01" min="0" max="1" value="0.05">
+                    </div>
+                    <div class="editor-field">
+                        <label>Alarma = true:</label>
+                        <input type="number" id="p-j-t" step="0.01" min="0" max="1" value="0.90">
+                    </div>
+                </div>
+
+                <div class="editor-group">
+                    <h4>P(María Llama = true | Alarma)</h4>
+                    <div class="editor-field">
+                        <label>Alarma = false:</label>
+                        <input type="number" id="p-m-f" step="0.01" min="0" max="1" value="0.01">
+                    </div>
+                    <div class="editor-field">
+                        <label>Alarma = true:</label>
+                        <input type="number" id="p-m-t" step="0.01" min="0" max="1" value="0.70">
+                    </div>
+                </div>
+            </div>
             
             <div class="controls">
                 <label>Variable a Consultar:</label>
@@ -285,6 +417,44 @@
                 }
             }
         };
+
+        function toggleEditor() {
+            const editor = document.getElementById('editor');
+            editor.classList.toggle('show');
+        }
+
+        function actualizarRed() {
+            const pT = parseFloat(document.getElementById('p-terremoto').value);
+            const pR = parseFloat(document.getElementById('p-robo').value);
+
+            red.cpts.Terremoto.prior = [1 - pT, pT];
+            red.cpts.Robo.prior = [1 - pR, pR];
+
+            document.getElementById('display-t').textContent = pT;
+            document.getElementById('display-r').textContent = pR;
+
+            const aFF = parseFloat(document.getElementById('p-a-ff').value);
+            const aFT = parseFloat(document.getElementById('p-a-ft').value);
+            const aTF = parseFloat(document.getElementById('p-a-tf').value);
+            const aTT = parseFloat(document.getElementById('p-a-tt').value);
+
+            red.cpts.Alarma['false,false'] = [1 - aFF, aFF];
+            red.cpts.Alarma['false,true'] = [1 - aFT, aFT];
+            red.cpts.Alarma['true,false'] = [1 - aTF, aTF];
+            red.cpts.Alarma['true,true'] = [1 - aTT, aTT];
+
+            const jF = parseFloat(document.getElementById('p-j-f').value);
+            const jT = parseFloat(document.getElementById('p-j-t').value);
+
+            red.cpts.LlamaJuan.false = [1 - jF, jF];
+            red.cpts.LlamaJuan.true = [1 - jT, jT];
+
+            const mF = parseFloat(document.getElementById('p-m-f').value);
+            const mT = parseFloat(document.getElementById('p-m-t').value);
+
+            red.cpts.LlamaMaria.false = [1 - mF, mF];
+            red.cpts.LlamaMaria.true = [1 - mT, mT];
+        }
 
         function enumeracion(red, query, evidencia) {
             const vars = Object.keys(red.cpts);
@@ -353,6 +523,8 @@
         }
 
         function ejecutar() {
+            actualizarRed();
+            
             const query = document.getElementById('query-var').value;
             const evidencia = {};
             
