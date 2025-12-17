@@ -189,6 +189,25 @@
             line-height: 1.4;
         }
 
+        .btn-visualizacion {
+            width: 100%;
+            padding: 12px;
+            background: #0A0A0A;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 15px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+
+        .btn-visualizacion:hover {
+            background: #333;
+        }
+
         .editor {
             background: #fff9c4;
             padding: 15px;
@@ -390,6 +409,7 @@
         <div id="resultados" class="results">
             <h3>Resultados</h3>
             <div id="contenido"></div>
+            <a href="RBVisualizacion.html" class="btn-visualizacion">Ver Visualización de la Red</a>
         </div>
     </div>
 
@@ -443,6 +463,15 @@
 
             red.cpts.LlamaMaria.false = [1 - mF, mF];
             red.cpts.LlamaMaria.true = [1 - mT, mT];
+
+            // Guardar en localStorage para la visualización
+            localStorage.setItem('red_bayesiana_probs', JSON.stringify({
+                terremoto: pT,
+                robo: pR,
+                alarma: { ff: aFF, ft: aFT, tf: aTF, tt: aTT },
+                juan: { f: jF, t: jT },
+                maria: { f: mF, t: mT }
+            }));
         }
 
         function buildKey(scope, asig) {

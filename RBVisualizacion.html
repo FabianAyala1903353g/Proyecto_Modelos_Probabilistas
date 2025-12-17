@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visualización Red Bayesiana</title>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+h1 { color:#0A0A0A; margin-bottom:10px; }
+.subtitle { color:#666; margin-bottom:20px; }
+
+.buttons-container { margin-bottom:20px; }
+
+.btn-back {
+    display:inline-block;
+    padding:10px 20px;
+    background:#666;
+    color:white;
+    text-decoration:none;
+    border-radius:4px;
+    margin-right:10px;
+}
+
+.btn-download {
+    padding:10px 20px;
+    background:#4caf50;
+    color:white;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+}
+
+.graph-container {
+    position: relative;
+    width: 100%;
+    min-height: 1100px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    padding: 40px;
+}
+
+svg { width:100%; height:600px; }
+
+.node-circle {
+    stroke:#fff;
+    stroke-width:3;
+    cursor:pointer;
+}
+
+.node-text {
+    fill:white;
+    font-size:14px;
+    font-weight:bold;
+    text-anchor:middle;
+    pointer-events:none;
+}
+
+.arrow {
+    stroke:#666;
+    stroke-width:2;
+    fill:none;
+    marker-end:url(#arrowhead);
+}
+
+.connector-line {
+    stroke:#aaa;
+    stroke-width:1;
+    stroke-dasharray:5,5;
+}
+
+.probability-table {
+    position:absolute;
+    background:white;
+    border:2px solid #0A0A0A;
+    border-radius:8px;
+    padding:12px;
+    min-width:200px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    z-index:10;
+}
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:8px;
+}
+
+th, td {
+    border:1px solid #ddd;
+    padding:5px;
+    text-align:center;
+    font-size:11px;
+}
+
+th {
+    background:#0A0A0A;
+    color:white;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="buttons-container">
+    <a href="index.html" class="btn-back">Volver al Inicio</a>
+    <button class="btn-download" onclick="descargarPNG()">Descargar PNG</button>
+</div>
+
+<h1>Visualización de Red Bayesiana</h1>
+<p class="subtitle">Red Alarma – Robo – Terremoto</p>
+
+<div class="graph-container" id="graph"></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+/* ===============================
+   CARGAR PROBABILIDADES (CLAVE)
+   =============================== */
+function cargarProbabilidades() {
+    const stored = localStorage.getItem('red_bayesiana_probs');
+    if (stored) return JSON.parse(stored);
+
+    return {
+        terremoto: 0.002,
+        robo: 0.001,
+        alarma: { ff:0.001, ft:0.94, tf:0.29, tt:0.95 },
+        juan: { f:0.05, t:0.90 },
+        maria:{ f:0.01, t:0.70 }
+    };
+}
+
+const probs = cargarProbabilidades();
+
+/* ===============================
+   DEFINICIÓN DE LA RED
+   =============================== */
+const red = {
+    nodos: [
+        { id:'Terremoto', x:350, y:120, color:'#0A0A0A', tableX:40, tableY:80 },
+        { id:'Robo', x:750, y:120, color:'#0A0A0A', tableX:1100, tableY:80 },
+        { id:'Alarma', x:550, y:300, color:'#555', tableX:1100, tableY:300 },
+        { id:'LlamaJuan', x:400, y:500, color:'#888', tableX:40, tableY:480 },
+        { id:'LlamaMaria', x:700, y:500, color:'#888', tableX:1100, tableY:480 }
+    ],
+    aristas: [
+        { from:'Terremoto', to:'Alarma' },
+        { from:'Robo', to:'Alarma' },
+        { from:'Alarma', to:'LlamaJuan' },
+        { from:'Alarma', to:'LlamaMaria' }
+    ],
+    cpts: {
+        Terremoto:{ tipo:'simple', pT:probs.terremoto },
+        Robo:{ tipo:'simple', pT:probs.robo },
+        Alarma:{
+            tipo:'condicional',
+            padres:['Terremoto','Robo'],
+            vals:{
+                'false,false':probs.alarma.ff,
+                'false,true':probs.alarma.ft,
+                'true,false':probs.alarma.tf,
+                'true,true':probs.alarma.tt
+            }
+        },
+        LlamaJuan:{
+            tipo:'condicional',
+            padres:['Alarma'],
+            vals:{ false:probs.juan.f, true:probs.juan.t }
+        },
+        LlamaMaria:{
+            tipo:'condicional',
+            padres:['Alarma'],
+            vals:{ false:probs.maria.f, true:probs.maria.t }
+        }
+    }
+};
+
+/* ===============================
+   VISUALIZACIÓN
+   =============================== */
+function crearVisualizacion(){
+    const cont=document.getElementById('graph');
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','0 0 1100 600');
+
+    const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+    const marker=document.createElementNS('http://www.w3.org/2000/svg','marker');
+    marker.setAttribute('id','arrowhead');
+    marker.setAttribute('markerWidth','10');
+    marker.setAttribute('markerHeight','10');
+    marker.setAttribute('refX','9');
+    marker.setAttribute('refY','3');
+    marker.setAttribute('orient','auto');
+    const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    poly.setAttribute('points','0 0,10 3,0 6');
+    poly.setAttribute('fill','#666');
+    marker.appendChild(poly);
+    defs.appendChild(marker);
+    svg.appendChild(defs);
+
+    const pos={};
+    red.nodos.forEach(n=>pos[n.id]=n);
+
+    red.aristas.forEach(a=>{
+        const f=pos[a.from], t=pos[a.to];
+        const dx=t.x-f.x, dy=t.y-f.y;
+        const ang=Math.atan2(dy,dx), r=40;
+        const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+        p.setAttribute('d',`M ${f.x+r*Math.cos(ang)} ${f.y+r*Math.sin(ang)} L ${t.x-r*Math.cos(ang)} ${t.y-r*Math.sin(ang)}`);
+        p.setAttribute('class','arrow');
+        svg.appendChild(p);
+    });
+
+    red.nodos.forEach(n=>{
+        const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+        c.setAttribute('cx',n.x); c.setAttribute('cy',n.y);
+        c.setAttribute('r','40'); c.style.fill=n.color;
+        c.setAttribute('class','node-circle');
+
+        const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+        t.setAttribute('x',n.x); t.setAttribute('y',n.y+5);
+        t.setAttribute('class','node-text');
+        t.textContent=n.id.replace('Llama','');
+
+        const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+        l.setAttribute('x1', n.x);
+        l.setAttribute('y1', n.y); // centro del nodo
+        l.setAttribute('x2', n.tableX + 100);
+        l.setAttribute('y2', n.tableY + 20); // centro aproximado de la tabla
+        l.setAttribute('class','connector-line');
+
+
+        svg.appendChild(c); svg.appendChild(t); svg.appendChild(l);
+    });
+
+    cont.appendChild(svg);
+    red.nodos.forEach(n=>crearTabla(n));
+}
+
+function crearTabla(n){
+    const d=document.createElement('div');
+    d.className='probability-table';
+    d.style.left=n.tableX+'px';
+    d.style.top=n.tableY+'px';
+
+    let h=`<strong>${n.id}</strong><br>`;
+    const c=red.cpts[n.id];
+
+    if(c.tipo==='simple'){
+        h+=`P(T)=${c.pT}<br>P(F)=${(1-c.pT).toFixed(3)}`;
+    } else {
+        h+='<table><tr>';
+        c.padres.forEach(p=>h+=`<th>${p}</th>`);
+        h+='<th>P(T)</th></tr>';
+        for(const k in c.vals){
+            h+='<tr>'+k.split(',').map(v=>`<td>${v[0].toUpperCase()}</td>`).join('');
+            h+=`<td>${c.vals[k]}</td></tr>`;
+        }
+        h+='</table>';
+    }
+
+    d.innerHTML=h;
+    document.getElementById('graph').appendChild(d);
+}
+
+function descargarPNG(){
+    html2canvas(document.getElementById('graph'),{scale:2}).then(c=>{
+        const a=document.createElement('a');
+        a.download='red_bayesiana.png';
+        a.href=c.toDataURL();
+        a.click();
+    });
+}
+
+crearVisualizacion();
+</script>
+</body>
+</html>
