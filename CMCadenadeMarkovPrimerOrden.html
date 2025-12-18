@@ -5,301 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadena de Markov - Primer Orden</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            color: #0A0A0A;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .btn-back {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #666;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        .btn-back:hover {
-            background: #555;
-        }
-
-        .section {
-            margin: 20px 0;
-            padding: 15px;
-            background: #fafafa;
-            border-radius: 5px;
-        }
-
-        .section h2 {
-            color: #0A0A0A;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-
-        .network-viz {
-            background: white;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin: 15px 0;
-        }
-
-        svg {
-            width: 100%;
-            height: 600px;
-        }
-
-        .controls {
-            margin: 15px 0;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #0A0A0A;
-        }
-
-        input[type="number"], select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background: #0A0A0A;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 15px;
-        }
-
-        .btn:hover {
-            background: #1a1a1a;
-        }
-
-        .results {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e8f5e9;
-            border: 1px solid #4caf50;
-            border-radius: 4px;
-            display: none;
-        }
-
-        .results.show {
-            display: block;
-        }
-
-        .results h3 {
-            color: #0A0A0A;
-            margin-bottom: 10px;
-        }
-
-        .result-item {
-            margin: 10px 0;
-            padding: 10px;
-            background: white;
-            border-radius: 4px;
-        }
-
-        .matrix-container {
-            overflow-x: auto;
-            margin: 15px 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        th {
-            background: #0A0A0A;
-            color: white;
-            font-weight: bold;
-        }
-
-        td {
-            background: #f9f9f9;
-        }
-
-        .info-box {
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border-left: 4px solid #0A0A0A;
-        }
-
-        .info-box p {
-            color: #666;
-            line-height: 1.6;
-            margin: 5px 0;
-        }
-
-        .prob-label {
-            font-weight: bold;
-            color: #0A0A0A;
-        }
-
-        .estado-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 15px 0;
-        }
-
-        .estado-item {
-            padding: 10px;
-            background: white;
-            border: 2px solid #0A0A0A;
-            border-radius: 5px;
-        }
-
-        .estado-item h4 {
-            color: #0A0A0A;
-            margin-bottom: 8px;
-        }
-
-        .btn-visualizacion {
-            width: 100%;
-            padding: 12px;
-            background: #0A0A0A;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 15px;
-            text-decoration: none;
-            display: block;
-            text-align: center;
-        }
-
-        .btn-visualizacion:hover {
-            background: #333;
-        }
-        
-        .probability-input-group {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 4px;
-        }
-        
-        .probability-input-group label {
-            grid-column: span 5;
-            font-weight: bold;
-            color: #0A0A0A;
-            margin-bottom: 10px;
-        }
-        
-        .probability-input-group div {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .probability-input-group div label {
-            font-size: 12px;
-            font-weight: normal;
-            margin-bottom: 2px;
-        }
-        
-        .initial-state-selector {
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-            border: 1px solid #ddd;
-        }
-        
-        .state-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-right: 5px;
-            margin-bottom: 5px;
-            color: white;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #0A0A0A; margin-bottom: 10px; font-size: 24px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+        .btn-back { display: inline-block; padding: 10px 20px; background: #666; color: white; text-decoration: none; border-radius: 4px; font-size: 14px; margin-bottom: 20px; }
+        .btn-back:hover { background: #555; }
+        .section { margin: 20px 0; padding: 15px; background: #fafafa; border-radius: 5px; }
+        .section h2 { color: #0A0A0A; margin-bottom: 15px; font-size: 18px; }
+        .controls { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #0A0A0A; }
+        input[type="number"], select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 10px; }
+        .btn { padding: 12px; background: #0A0A0A; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; margin-top: 15px; }
+        .btn:hover { background: #1a1a1a; }
+        .results { margin-top: 20px; padding: 15px; background: #f0f0f0; border: 1px solid #0a0a0a; border-radius: 4px; display: none; }
+        .results.show { display: block; }
+        .results h3 { color: #0A0A0A; margin-bottom: 10px; }
+        .result-item { margin: 10px 0; padding: 10px; background: white; border-radius: 4px; }
+        .matrix-container { overflow-x: auto; margin: 15px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 13px; }
+        th { background: #0A0A0A; color: white; font-weight: bold; }
+        td { background: #f9f9f9; }
+        .info-box { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #0A0A0A; }
+        .info-box p { color: #666; line-height: 1.6; margin: 5px 0; }
+        .prob-label { font-weight: bold; color: #0A0A0A; }
+        .estado-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0; }
+        .estado-item { padding: 10px; background: white; border: 2px solid #0A0A0A; border-radius: 5px; }
+        .estado-item h4 { color: #0A0A0A; margin-bottom: 8px; }
+        .btn-visualizacion { width: 100%; padding: 12px; background: #0A0A0A; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; margin-top: 15px; text-decoration: none; display: block; text-align: center; }
+        .btn-visualizacion:hover { background: #333; }
+        .probability-input-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px; }
+        .probability-input-group label { grid-column: span 5; font-weight: bold; color: #0A0A0A; margin-bottom: 10px; }
+        .probability-input-group div { display: flex; flex-direction: column; gap: 5px; }
+        .probability-input-group div label { font-size: 12px; font-weight: normal; margin-bottom: 2px; }
+        .initial-state-selector { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ddd; }
+        .state-badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; margin-right: 5px; margin-bottom: 5px; color: white; }
         .state-E { background: #0A0A0A; }
         .state-V { background: #666; }
         .state-C { background: #888; }
         .state-R { background: #aaa; }
         .state-F { background: #4caf50; }
-        
-        .highlight-box {
-            background: #f0f0f0;
-            padding: 15px;
+        .highlight-box { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #0A0A0A; }
+        .analysis-box { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #0a0a0a; }
+        .summary-box { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #0a0a0a; }
+        .info-message {
+            background: #e8f5e9;
+            color: #0a0a0a;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 15px;
             border-radius: 5px;
-            margin: 15px 0;
-            border-left: 4px solid #0A0A0A;
+            border-left: 4px solid #0a0a0a;
         }
-        
-        .analysis-box {
-            background: #f0f0f0;
-            padding: 15px;
+        .warning-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 15px;
             border-radius: 5px;
-            margin: 15px 0;
-            border-left: 4px solid #0A0A0A;
+            border-left: 4px solid #c62828;
         }
-        
-        .summary-box {
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .button-group .btn {
+            flex: 1;
+        }
+        .btn-default {
+            background: #666;
+        }
+        .btn-default:hover {
+            background: #555;
+        }
+        .absorbent-toggle {
+            margin-top: 10px;
+            padding: 10px;
             background: #f0f0f0;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-            border-left: 4px solid #0A0A0A;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .absorbent-toggle label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+        .absorbent-toggle input[type="checkbox"] {
+            width: auto;
+            margin-bottom: 0;
+        }
+        .note-box {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #0a0a0a;
         }
     </style>
 </head>
@@ -307,49 +113,55 @@
     <div class="container">
         <a href="index.html" class="btn-back">Volver al Inicio</a>
         
-        <h1>Cadena de Markov - Primer Orden</h1>
+        <h1>Algoritmo 4: Cadena de Markov - Primer Orden</h1>
         <p class="subtitle">Ejemplo: Comportamiento en Compras Online</p>
 
+        <div id="info-message-container"></div>
+
         <div class="info-box">
-            <p>Descripcion del Modelo:</p>
+            <p><strong>Descripción del Modelo:</strong></p>
             <p>Modelamos el comportamiento de un usuario en una tienda online con 5 estados:</p>
-            <p>• Explorando (E): Usuario navegando por categorias</p>
-            <p>• Viendo Producto (V): Visualizando pagina de producto</p>
-            <p>• Comparando (C): Comparando productos</p>
-            <p>• En Carrito (R): Producto añadido al carrito</p>
-            <p>• Compra Completada (F): Finalizacion de compra (estado absorbente)</p>
+            <p>• <strong>Explorando (E):</strong> Usuario navegando por categorías</p>
+            <p>• <strong>Viendo Producto (V):</strong> Visualizando página de producto</p>
+            <p>• <strong>Comparando (C):</strong> Comparando productos</p>
+            <p>• <strong>En Carrito (R):</strong> Producto añadido al carrito</p>
+            <p>• <strong>Compra Completada (F):</strong> Finalización de compra</p>
+            <p style="margin-top: 10px;"><strong>Nota:</strong> F puede ser configurado como estado absorbente o no absorbente.</p>
         </div>
 
         <div class="section">
-            <h2>Matriz de Transicion de Estados (P)</h2>
+            <h2>Matriz de Transición de Estados (P)</h2>
             <div class="matrix-container">
                 <table id="transition-matrix">
                     <thead>
                         <tr>
-                            <th>Desde / Hacia</th>
+                            <th>Desde \ Hacia</th>
                             <th>E</th>
                             <th>V</th>
                             <th>C</th>
                             <th>R</th>
                             <th>F</th>
-                            <th>Σ</th>
                         </tr>
                     </thead>
                     <tbody id="matrix-display">
-                        <!-- Se llena dinamicamente -->
                     </tbody>
                 </table>
+                <div id="absorbent-status" style="margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 4px;">
+                    <p><strong>Estado F:</strong> <span id="absorbent-text">Es estado absorbente (P(F→F) = 1.0)</span></p>
+                </div>
                 <p style="margin-top: 10px; color: #666; font-size: 13px;">
-                    Nota: F (Compra Completada) es un estado absorbente con P(F→F) = 1.0. 
-                    Cada fila suma 1 (propiedad estocastica).
+                    <strong>Nota:</strong> Cada fila debe sumar 1 (propiedad estocástica).
                 </p>
-                <button class="btn" onclick="toggleEditor()" style="margin-top: 10px;">Editar Probabilidades</button>
+                <div class="button-group">
+                    <button class="btn" onclick="toggleEditor()">Editar Probabilidades</button>
+                    <button class="btn btn-default" onclick="restaurarValoresPorDefecto()">Volver a Valores por Defecto</button>
+                </div>
             </div>
         </div>
 
         <div id="editor" class="section" style="display: none;">
             <h2>Editor de Probabilidades</h2>
-            <p style="color: #666; margin-bottom: 15px;">Modifica las probabilidades de transicion. Cada fila debe sumar 1.0</p>
+            <p style="color: #666; margin-bottom: 15px;">Modifica las probabilidades de transición. Cada fila debe sumar 1.0</p>
             
             <div class="probability-input-group">
                 <label>Estado E (Explorando):</label>
@@ -387,18 +199,35 @@
                 <div><label>→ F:</label><input type="number" id="p-r-f" step="0.01" min="0" max="1" value="0.25"></div>
             </div>
 
-            <p style="color: #666; font-size: 13px; margin-top: 10px;">
-                Nota: El estado F (Compra Completada) es absorbente y no puede ser modificado.
-            </p>
+            <div class="probability-input-group">
+                <label>Estado F (Compra Completada):</label>
+                <div><label>→ E:</label><input type="number" id="p-f-e" step="0.01" min="0" max="1" value="0.00"></div>
+                <div><label>→ V:</label><input type="number" id="p-f-v" step="0.01" min="0" max="1" value="0.00"></div>
+                <div><label>→ C:</label><input type="number" id="p-f-c" step="0.01" min="0" max="1" value="0.00"></div>
+                <div><label>→ R:</label><input type="number" id="p-f-r" step="0.01" min="0" max="1" value="0.00"></div>
+                <div><label>→ F:</label><input type="number" id="p-f-f" step="0.01" min="0" max="1" value="1.00"></div>
+            </div>
 
-            <button class="btn" onclick="aplicarCambios()">Aplicar Cambios</button>
+            <div class="absorbent-toggle">
+                <input type="checkbox" id="absorbent-checkbox" checked onchange="toggleAbsorbentState()">
+                <label for="absorbent-checkbox">F es estado absorbente (una vez en F, no se sale)</label>
+            </div>
+            
+            <div class="note-box" id="absorbent-note">
+                <strong>Nota:</strong> Cuando F es absorbente, P(F→F) = 1 y P(F→otros) = 0. Si desactivas esta opción, F se convierte en estado transitorio y puedes volver a otros estados.
+            </div>
+
+            <div class="button-group">
+                <button class="btn" onclick="aplicarCambios()">Aplicar Cambios</button>
+                <button class="btn btn-default" onclick="cancelarEdicion()">Cancelar</button>
+            </div>
         </div>
 
         <div class="section">
-            <h2>Analisis Matematico</h2>
+            <h2>Análisis Matemático</h2>
             
             <div class="initial-state-selector">
-                <h3 style="color: #0A0A0A; margin-bottom: 10px;">Distribucion Inicial</h3>
+                <h3 style="color: #0A0A0A; margin-bottom: 10px;">Distribución Inicial</h3>
                 <label>Seleccione el estado inicial del usuario:</label>
                 <select id="estado-inicial" onchange="actualizarDistribucionInicial()">
                     <option value="0" selected>Explorando (E) - π(0) = [1, 0, 0, 0, 0]</option>
@@ -409,72 +238,273 @@
                 </select>
                 <div id="distribucion-inicial-display" style="margin-top: 10px;">
                     <p>π(0) = [<span id="pi-0">1</span>, <span id="pi-1">0</span>, <span id="pi-2">0</span>, <span id="pi-3">0</span>, <span id="pi-4">0</span>]</p>
-                    <p>Usuario comienza en estado: Explorando (E)</p>
+                    <p>Usuario comienza en estado: <strong>Explorando (E)</strong></p>
                 </div>
             </div>
 
             <div class="controls">
-                <label>Numero de pasos (iteraciones):</label>
+                <label>Número de pasos (iteraciones):</label>
                 <input type="number" id="num-pasos" min="1" max="100" value="5">
             </div>
 
-            <button class="btn" onclick="calcularProbabilidades()">Calcular Distribucion π(n) = π(0) × P^n</button>
+            <button class="btn" onclick="calcularProbabilidades()">Calcular Distribución π(n) = π(0) × P^n</button>
         </div>
 
         <div id="resultados" class="results">
             <h3>Resultados</h3>
             <div id="contenido-resultados"></div>
-            <a href="CMVisualizacion.html" class="btn-visualizacion">Ver Visualizacion de la Red</a>
+        </div>
+
+        <div class="section" style="text-align: center; margin-top: 30px;">
+            <a href="CMMatrizTransicionEstados.html" class="btn-visualizacion">
+                Ver Matriz de Transición (CON LA MISMA MATRIZ)
+            </a>
+
+            <a href="CMProbabilidadesEstacionarias.html" class="btn-visualizacion" style="margin-top: 10px;">
+                Ver Probabilidades Estacionarias (CON LA MISMA MATRIZ)
+            </a>
+
+            <a href="CMVisualizacion.html" class="btn-visualizacion" style="margin-top: 10px;">
+                Ver Visualización de la Red
+            </a>
         </div>
     </div>
 
     <script>
-        // Matriz de transicion P (editable)
-        let P = [
+        // Matriz por defecto (ejemplo)
+        const P_POR_DEFECTO = [
             [0.20, 0.40, 0.20, 0.15, 0.05],  // E
             [0.10, 0.30, 0.25, 0.25, 0.10],  // V
             [0.05, 0.25, 0.30, 0.30, 0.10],  // C
             [0.00, 0.10, 0.15, 0.50, 0.25],  // R
-            [0.00, 0.00, 0.00, 0.00, 1.00]   // F (absorbente)
+            [0.00, 0.00, 0.00, 0.00, 1.00]   // F (absorbente por defecto)
         ];
+
+        let P = [...P_POR_DEFECTO.map(row => [...row])]; // Copia de la matriz por defecto
+        let esAbsorbenteF = true; // Por defecto, F es absorbente
 
         const estados = ['Explorando (E)', 'Viendo Producto (V)', 'Comparando (C)', 'En Carrito (R)', 'Compra Completada (F)'];
         const estadosCodigo = ['E', 'V', 'C', 'R', 'F'];
 
-        // ============================================================================
-        // FUNCIONES DE INTERFAZ
-        // ============================================================================
+        // Cargar matriz editada desde localStorage si existe
+        function cargarMatrizEditada() {
+            const matrizGuardada = localStorage.getItem('markovMatrix');
+            if (matrizGuardada) {
+                try {
+                    const matrizCargada = JSON.parse(matrizGuardada);
+                    // Copiar valores a P
+                    for (let i = 0; i < 5; i++) {
+                        for (let j = 0; j < 5; j++) {
+                            P[i][j] = matrizCargada[i][j];
+                        }
+                    }
+                    
+                    // Determinar si F es absorbente
+                    esAbsorbenteF = esFilaAbsorbente(P[4]);
+                    console.log('Matriz cargada desde localStorage. F absorbente:', esAbsorbenteF);
+                    
+                    // Mostrar mensaje al usuario
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'info-message';
+                    infoDiv.textContent = '✓ Visualización con probabilidades editadas cargadas';
+                    document.getElementById('info-message-container').appendChild(infoDiv);
+                    
+                    setTimeout(() => infoDiv.remove(), 5000);
+                    
+                    return true;
+                } catch (e) {
+                    console.error('Error al cargar matriz:', e);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        // Función para determinar si una fila es absorbente
+        function esFilaAbsorbente(fila) {
+            // Una fila es absorbente si: P(i→i) = 1 y P(i→j) = 0 para j ≠ i
+            return Math.abs(fila[4] - 1) < 0.001 && 
+                   Math.abs(fila[0]) < 0.001 && 
+                   Math.abs(fila[1]) < 0.001 && 
+                   Math.abs(fila[2]) < 0.001 && 
+                   Math.abs(fila[3]) < 0.001;
+        }
+
+        // Cargar valores actuales en los inputs del editor
+        function cargarValoresEnEditor() {
+            // Comprobar si hay matriz guardada
+            const matrizGuardada = localStorage.getItem('markovMatrix');
+            let matrizParaEditor;
+            
+            if (matrizGuardada) {
+                try {
+                    matrizParaEditor = JSON.parse(matrizGuardada);
+                    esAbsorbenteF = esFilaAbsorbente(matrizParaEditor[4]);
+                } catch (e) {
+                    matrizParaEditor = P_POR_DEFECTO;
+                    esAbsorbenteF = true;
+                }
+            } else {
+                matrizParaEditor = P_POR_DEFECTO;
+                esAbsorbenteF = true;
+            }
+            
+            // Cargar valores en los inputs
+            document.getElementById('p-e-e').value = matrizParaEditor[0][0];
+            document.getElementById('p-e-v').value = matrizParaEditor[0][1];
+            document.getElementById('p-e-c').value = matrizParaEditor[0][2];
+            document.getElementById('p-e-r').value = matrizParaEditor[0][3];
+            document.getElementById('p-e-f').value = matrizParaEditor[0][4];
+            
+            document.getElementById('p-v-e').value = matrizParaEditor[1][0];
+            document.getElementById('p-v-v').value = matrizParaEditor[1][1];
+            document.getElementById('p-v-c').value = matrizParaEditor[1][2];
+            document.getElementById('p-v-r').value = matrizParaEditor[1][3];
+            document.getElementById('p-v-f').value = matrizParaEditor[1][4];
+            
+            document.getElementById('p-c-e').value = matrizParaEditor[2][0];
+            document.getElementById('p-c-v').value = matrizParaEditor[2][1];
+            document.getElementById('p-c-c').value = matrizParaEditor[2][2];
+            document.getElementById('p-c-r').value = matrizParaEditor[2][3];
+            document.getElementById('p-c-f').value = matrizParaEditor[2][4];
+            
+            document.getElementById('p-r-e').value = matrizParaEditor[3][0];
+            document.getElementById('p-r-v').value = matrizParaEditor[3][1];
+            document.getElementById('p-r-c').value = matrizParaEditor[3][2];
+            document.getElementById('p-r-r').value = matrizParaEditor[3][3];
+            document.getElementById('p-r-f').value = matrizParaEditor[3][4];
+            
+            document.getElementById('p-f-e').value = matrizParaEditor[4][0];
+            document.getElementById('p-f-v').value = matrizParaEditor[4][1];
+            document.getElementById('p-f-c').value = matrizParaEditor[4][2];
+            document.getElementById('p-f-r').value = matrizParaEditor[4][3];
+            document.getElementById('p-f-f').value = matrizParaEditor[4][4];
+            
+            // Actualizar checkbox y estado de los inputs
+            document.getElementById('absorbent-checkbox').checked = esAbsorbenteF;
+            toggleAbsorbentInputs();
+            
+            console.log('Editor cargado con:', matrizGuardada ? 'valores editados' : 'valores por defecto');
+            console.log('F es absorbente:', esAbsorbenteF);
+        }
+
+        // Alternar estado de los inputs de la fila F
+        function toggleAbsorbentInputs() {
+            const inputsF = ['p-f-e', 'p-f-v', 'p-f-c', 'p-f-r'];
+            const enabled = !esAbsorbenteF;
+            
+            inputsF.forEach(id => {
+                const input = document.getElementById(id);
+                input.disabled = !enabled;
+                input.style.backgroundColor = enabled ? 'white' : '#f0f0f0';
+            });
+            
+            const inputFF = document.getElementById('p-f-f');
+            if (esAbsorbenteF) {
+                inputFF.value = '1.00';
+                inputFF.disabled = false;
+                inputFF.style.backgroundColor = '#e8f5e9';
+            } else {
+                inputFF.disabled = false;
+                inputFF.style.backgroundColor = 'white';
+            }
+            
+            // Actualizar texto informativo
+            const noteBox = document.getElementById('absorbent-note');
+            if (esAbsorbenteF) {
+                noteBox.innerHTML = '<strong>Nota:</strong> F es estado absorbente. P(F→F) = 1 y P(F→otros) = 0. Para cambiar esto, desactiva la casilla.';
+            } else {
+                noteBox.innerHTML = '<strong>Nota:</strong> F es estado transitorio. Puedes asignar probabilidades de volver a otros estados. Recuerda que la fila debe sumar 1.0.';
+            }
+        }
+
+        // Manejar el cambio del checkbox de estado absorbente
+        function toggleAbsorbentState() {
+            esAbsorbenteF = document.getElementById('absorbent-checkbox').checked;
+            toggleAbsorbentInputs();
+            
+            // Si se activa el estado absorbente, establecer valores por defecto
+            if (esAbsorbenteF) {
+                document.getElementById('p-f-e').value = '0.00';
+                document.getElementById('p-f-v').value = '0.00';
+                document.getElementById('p-f-c').value = '0.00';
+                document.getElementById('p-f-r').value = '0.00';
+                document.getElementById('p-f-f').value = '1.00';
+            }
+        }
+
+        // Restaurar valores por defecto
+        function restaurarValoresPorDefecto() {
+            if (confirm('¿Está seguro de restaurar los valores por defecto? Se perderán los cambios guardados.')) {
+                // Restaurar matriz P
+                for (let i = 0; i < 5; i++) {
+                    for (let j = 0; j < 5; j++) {
+                        P[i][j] = P_POR_DEFECTO[i][j];
+                    }
+                }
+                
+                // Restaurar estado absorbente
+                esAbsorbenteF = true;
+                
+                // Eliminar matriz guardada
+                localStorage.removeItem('markovMatrix');
+                
+                // Actualizar display
+                actualizarDisplay();
+                
+                // Cargar valores por defecto en el editor si está abierto
+                if (document.getElementById('editor').style.display === 'block') {
+                    cargarValoresEnEditor();
+                }
+                
+                // Mostrar mensaje
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'info-message';
+                infoDiv.textContent = '✓ Valores restaurados a los del ejemplo por defecto';
+                const container = document.getElementById('info-message-container');
+                container.innerHTML = '';
+                container.appendChild(infoDiv);
+                
+                setTimeout(() => infoDiv.remove(), 5000);
+                
+                console.log('Valores restaurados a los por defecto');
+            }
+        }
 
         function toggleEditor() {
             const editor = document.getElementById('editor');
-            editor.style.display = editor.style.display === 'none' ? 'block' : 'none';
+            if (editor.style.display === 'none') {
+                // Cargar valores actuales cuando se abre el editor
+                cargarValoresEnEditor();
+                editor.style.display = 'block';
+            } else {
+                editor.style.display = 'none';
+            }
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('editor').style.display = 'none';
         }
 
         function actualizarDistribucionInicial() {
             const estadoSeleccionado = parseInt(document.getElementById('estado-inicial').value);
-            
-            // Actualizar display de la distribucion
             for (let i = 0; i < 5; i++) {
-                const valor = i === estadoSeleccionado ? '1' : '0';
-                document.getElementById(`pi-${i}`).textContent = valor;
+                document.getElementById(`pi-${i}`).textContent = i === estadoSeleccionado ? '1' : '0';
             }
-            
-            // Actualizar texto del estado
-            const nombresEstados = ['Explorando (E)', 'Viendo Producto (V)', 'Comparando (C)', 'En Carrito (R)', 'Compra Completada (F)'];
             document.querySelector('#distribucion-inicial-display p:nth-child(2)').innerHTML = 
-                `Usuario comienza en estado: ${nombresEstados[estadoSeleccionado]}`;
+                `Usuario comienza en estado: <strong>${estados[estadoSeleccionado]}</strong>`;
         }
 
         function aplicarCambios() {
-            // Validar todos los valores
             const inputs = [
                 ['p-e-e', 'p-e-v', 'p-e-c', 'p-e-r', 'p-e-f'],
                 ['p-v-e', 'p-v-v', 'p-v-c', 'p-v-r', 'p-v-f'],
                 ['p-c-e', 'p-c-v', 'p-c-c', 'p-c-r', 'p-c-f'],
-                ['p-r-e', 'p-r-v', 'p-r-c', 'p-r-r', 'p-r-f']
+                ['p-r-e', 'p-r-v', 'p-r-c', 'p-r-r', 'p-r-f'],
+                ['p-f-e', 'p-f-v', 'p-f-c', 'p-f-r', 'p-f-f']
             ];
 
-            // Validar valores entre 0 y 1
+            // Validar entradas
             for (let i = 0; i < inputs.length; i++) {
                 for (let j = 0; j < inputs[i].length; j++) {
                     const valor = parseFloat(document.getElementById(inputs[i][j]).value);
@@ -485,403 +515,204 @@
                 }
             }
 
-            // Validar que cada fila suma 1
+            // Validar que cada fila sume 1
             for (let i = 0; i < inputs.length; i++) {
                 let suma = 0;
                 for (let j = 0; j < inputs[i].length; j++) {
                     suma += parseFloat(document.getElementById(inputs[i][j]).value);
                 }
                 if (Math.abs(suma - 1.0) > 0.001) {
-                    alert(`Error: La fila ${i + 1} suma ${suma.toFixed(3)}, debe sumar 1.0`);
+                    alert(`Error: La fila ${estadosCodigo[i]} suma ${suma.toFixed(3)}, debe sumar 1.0`);
                     return;
                 }
             }
 
-            // Actualizar matriz P
-            for (let i = 0; i < 4; i++) {
+            // Aplicar cambios a la matriz P
+            for (let i = 0; i < 5; i++) {
                 for (let j = 0; j < 5; j++) {
                     P[i][j] = parseFloat(document.getElementById(inputs[i][j]).value);
                 }
             }
 
+            // Actualizar estado absorbente basado en la fila F
+            esAbsorbenteF = esFilaAbsorbente(P[4]);
+
+            // Guardar en localStorage
+            localStorage.setItem('markovMatrix', JSON.stringify(P));
+            
             // Actualizar display
             actualizarDisplay();
-            alert('Probabilidades actualizadas correctamente');
-        }
-
-        function actualizarDisplay() {
-            const tbody = document.getElementById('matrix-display');
-            let html = '';
             
-            for (let i = 0; i < 5; i++) {
-                html += `<tr><th style="background: #f0f0f0; color: #0A0A0A;">${estadosCodigo[i]}</th>`;
-                let suma = 0;
-                for (let j = 0; j < 5; j++) {
-                    html += `<td>${P[i][j].toFixed(2)}</td>`;
-                    suma += P[i][j];
-                }
-                html += `<td>${suma.toFixed(2)}</td></tr>`;
-            }
-            
-            tbody.innerHTML = html;
-        }
-
-        // ============================================================================
-        // FUNCIONES MATEMATICAS CORRECTAS PARA CADENAS DE MARKOV
-        // ============================================================================
-
-        // CORRECCION: Multiplicar vector fila por matriz (π × P)
-        function multiplicarVectorMatriz(vector, matriz) {
-            const resultado = [0, 0, 0, 0, 0];
-            
-            for (let j = 0; j < 5; j++) { // Para cada columna de destino
-                for (let i = 0; i < 5; i++) { // Para cada estado origen
-                    resultado[j] += vector[i] * matriz[i][j];
-                }
-            }
-            return resultado;
-        }
-
-        // Multiplicar dos matrices
-        function multiplicarMatrices(A, B) {
-            const n = A.length;
-            const m = B[0].length;
-            const resultado = Array(n).fill(0).map(() => Array(m).fill(0));
-            
-            for (let i = 0; i < n; i++) {
-                for (let j = 0; j < m; j++) {
-                    for (let k = 0; k < B.length; k++) {
-                        resultado[i][j] += A[i][k] * B[k][j];
-                    }
-                }
-            }
-            return resultado;
-        }
-
-        // Elevar matriz a potencia n
-        function potenciaMatriz(matriz, n) {
-            if (n === 1) return matriz.map(fila => [...fila]);
-            
-            // Exponentacion rapida por cuadrados
-            if (n % 2 === 0) {
-                const mitad = potenciaMatriz(matriz, n/2);
-                return multiplicarMatrices(mitad, mitad);
-            } else {
-                const menosUno = potenciaMatriz(matriz, n-1);
-                return multiplicarMatrices(matriz, menosUno);
-            }
-        }
-
-        // Matriz identidad
-        function matrizIdentidad(n) {
-            const I = Array(n).fill(0).map(() => Array(n).fill(0));
-            for (let i = 0; i < n; i++) {
-                I[i][i] = 1;
-            }
-            return I;
-        }
-
-        // Restar matrices
-        function restarMatrices(A, B) {
-            const n = A.length;
-            const resultado = Array(n).fill(0).map(() => Array(n).fill(0));
-            for (let i = 0; i < n; i++) {
-                for (let j = 0; j < n; j++) {
-                    resultado[i][j] = A[i][j] - B[i][j];
-                }
-            }
-            return resultado;
-        }
-
-        // Invertir matriz usando eliminacion de Gauss-Jordan
-        function invertirMatriz(matriz) {
-            const n = matriz.length;
-            const augmented = matriz.map((fila, i) => [...fila, ...matrizIdentidad(n)[i]]);
-            
-            // Eliminacion hacia adelante
-            for (let i = 0; i < n; i++) {
-                // Buscar pivote
-                let maxRow = i;
-                for (let k = i + 1; k < n; k++) {
-                    if (Math.abs(augmented[k][i]) > Math.abs(augmented[maxRow][i])) {
-                        maxRow = k;
-                    }
-                }
+            // Mostrar mensaje de confirmación
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'info-message';
+            infoDiv.textContent = `✓ Probabilidades actualizadas correctamente. F ${esAbsorbenteF ? 'es' : 'NO es'} estado absorbente`;
+            const container = document.getElementById('info-message-container');
+                container.innerHTML = '';
+                container.appendChild(infoDiv);
                 
-                // Intercambiar filas
-                [augmented[i], augmented[maxRow]] = [augmented[maxRow], augmented[i]];
+                setTimeout(() => infoDiv.remove(), 5000);
                 
-                // Hacer ceros debajo del pivote
-                for (let k = i + 1; k < n; k++) {
-                    const factor = augmented[k][i] / augmented[i][i];
-                    for (let j = i; j < 2 * n; j++) {
-                        augmented[k][j] -= factor * augmented[i][j];
-                    }
-                }
-            }
-            
-            // Eliminacion hacia atras
-            for (let i = n - 1; i >= 0; i--) {
-                // Normalizar fila
-                const divisor = augmented[i][i];
-                for (let j = 0; j < 2 * n; j++) {
-                    augmented[i][j] /= divisor;
-                }
-                
-                // Hacer ceros arriba del pivote
-                for (let k = i - 1; k >= 0; k--) {
-                    const factor = augmented[k][i];
-                    for (let j = 0; j < 2 * n; j++) {
-                        augmented[k][j] -= factor * augmented[i][j];
-                    }
-                }
-            }
-            
-            // Extraer matriz inversa
-            const inversa = augmented.map(fila => fila.slice(n));
-            return inversa;
-        }
-
-        // ============================================================================
-        // ANALISIS DE CADENA DE MARKOV CON ESTADO ABSORBENTE
-        // ============================================================================
-
-        function calcularMatrizFundamental() {
-            try {
-                // Q: submatriz de transiciones entre estados transitorios (4x4)
-                const Q = P.slice(0, 4).map(fila => fila.slice(0, 4));
-                
-                // R: submatriz de transiciones a estado absorbente (4x1)
-                const R = P.slice(0, 4).map(fila => [fila[4]]);
-                
-                // N = (I - Q)^(-1)
-                const I = matrizIdentidad(4);
-                const I_menos_Q = restarMatrices(I, Q);
-                const N = invertirMatriz(I_menos_Q);
-                
-                // Tiempo esperado hasta absorcion: N * 1 (vector columna)
-                const tiempos = [];
-                for (let i = 0; i < 4; i++) {
-                    let suma = 0;
-                    for (let j = 0; j < 4; j++) {
-                        suma += N[i][j];
-                    }
-                    tiempos.push(suma);
-                }
-                
-                // Probabilidades de absorcion: B = N * R
-                const B = multiplicarMatrices(N, R);
-                
-                return { 
-                    N, 
-                    tiempos, 
-                    probabilidades: B.map(fila => fila[0]),
-                    Q: Q,
-                    R: R
-                };
-            } catch (error) {
-                console.error('Error en calculo de matriz fundamental:', error);
-                return null;
-            }
-        }
-
-        function calcularProbabilidades() {
-            const nPasos = parseInt(document.getElementById('num-pasos').value);
-            const estadoInicialIdx = parseInt(document.getElementById('estado-inicial').value);
-            
-            if (nPasos < 1 || nPasos > 100) {
-                alert('Por favor ingrese un numero entre 1 y 100');
-                return;
+                // Cerrar editor
+                document.getElementById('editor').style.display = 'none';
             }
 
-            try {
-                // Calcular P^n
-                const Pn = potenciaMatriz(P, nPasos);
-                
-                // Crear vector inicial segun seleccion
-                const pi0 = [0, 0, 0, 0, 0];
-                pi0[estadoInicialIdx] = 1;
-                
-                // Calcular π(n) = π(0) × P^n
-                const distribucion = multiplicarVectorMatriz(pi0, Pn);
-
-                // Normalizar
-                const suma = distribucion.reduce((a, b) => a + b, 0);
-                const distribNorm = suma > 0 ? distribucion.map(p => p / suma) : distribucion;
-
-                // Calcular analisis adicional
-                const analisisFundamental = calcularMatrizFundamental();
-
-                // Mostrar resultados
-                const contenido = document.getElementById('contenido-resultados');
+            function actualizarDisplay() {
+                const tbody = document.getElementById('matrix-display');
                 let html = '';
-                
-                // Informacion del estado inicial seleccionado
-                html += `<div class="highlight-box">`;
-                html += `<h4>Configuracion del Analisis</h4>`;
-                html += `<p>Estado inicial: ${estados[estadoInicialIdx]}</p>`;
-                html += `<p>Distribucion inicial π(0): [${pi0.join(', ')}]</p>`;
-                html += `<p>Numero de pasos: ${nPasos}</p>`;
-                html += `<p>Formula: π(${nPasos}) = π(0) × P^${nPasos}</p>`;
-                html += `</div>`;
-                
-                // Matriz P^n
-                html += `<div class="result-item">`;
-                html += `<h4>Matriz P^${nPasos} (Probabilidades de transicion en ${nPasos} pasos):</h4>`;
-                html += `<div class="matrix-container">`;
-                html += `<table style="margin: 15px 0; font-size: 12px;">`;
-                html += `<tr><th>Desde/Hacia</th><th>E</th><th>V</th><th>C</th><th>R</th><th>F</th><th>Suma</th></tr>`;
-                
-                estados.forEach((est, i) => {
-                    html += `<tr><th style="background: #f0f0f0; color: #0A0A0A;">${estadosCodigo[i]}</th>`;
-                    let sumaFila = 0;
-                    for (let j = 0; j < 5; j++) {
-                        html += `<td>${Pn[i][j].toFixed(4)}</td>`;
-                        sumaFila += Pn[i][j];
-                    }
-                    html += `<td style="font-weight: bold;">${sumaFila.toFixed(4)}</td>`;
-                    html += `</tr>`;
-                });
-                html += `</table>`;
-                html += `</div>`;
-                html += `<p style="margin: 5px 0; color: #666; font-size: 13px;">P^n[i][j] = Prob. de ir del estado i al estado j en exactamente ${nPasos} pasos</p>`;
-                html += `</div>`;
-                
-                // Distribucion π(n)
-                html += `<div class="result-item">`;
-                html += `<h4>Distribucion π(${nPasos}) = π(0) × P^${nPasos}:</h4>`;
-                html += `<div class="estado-grid">`;
-                
-                estados.forEach((est, i) => {
-                    const prob = distribNorm[i];
-                    const esCompra = i === 4;
-                    const esEstadoInicial = i === estadoInicialIdx;
-                    const estiloBorde = esCompra ? 'border-color: #4caf50;' : (esEstadoInicial ? 'border-color: #0A0A0A;' : '');
-                    const estiloFondo = esCompra ? 'background: #f0f0f0;' : (esEstadoInicial ? 'background: #f0f0f0;' : '');
-                    
-                    html += `<div class="estado-item" style="${estiloBorde} ${estiloFondo}">`;
-                    html += `<h4>${est}</h4>`;
-                    if (esEstadoInicial) {
-                        html += `<span class="state-badge state-${estadosCodigo[i]}" style="margin-bottom: 5px;">INICIAL</span>`;
-                    }
-                    html += `<p class="prob-label">${(prob * 100).toFixed(2)}%</p>`;
-                    html += `<p style="font-size: 11px; color: #666;">π[${i}] = ${prob.toFixed(4)}</p>`;
-                    html += `</div>`;
-                });
-                
-                html += `</div>`;
-                html += `<p style="margin: 10px 0; color: #666; font-size: 13px;">Verificacion: La suma es ${(distribNorm.reduce((a,b) => a+b, 0)).toFixed(4)} (debe ser 1.0)</p>`;
-                html += `</div>`;
-                
-                // Analisis con matriz fundamental (solo para estados transitorios)
-                if (analisisFundamental && estadoInicialIdx < 4) {
-                    html += `<div class="analysis-box">`;
-                    html += `<h4>Analisis de Estados Absorbentes</h4>`;
-                    html += `<p style="margin: 5px 0; color: #666; font-size: 13px;">Usando la matriz fundamental N = (I - Q)^(-1)</p>`;
-                    
-                    html += `<h5 style="margin-top: 15px; color: #0A0A0A;">Tiempo Esperado hasta Completar Compra:</h5>`;
-                    html += `<table style="width: 100%; margin: 10px 0;">`;
-                    analisisFundamental.tiempos.forEach((tiempo, i) => {
-                        const esEstadoActual = i === estadoInicialIdx;
-                        html += `<tr><td style="padding: 5px;">
-                            Desde ${estados[i]}: ${esEstadoActual ? '(TU ESTADO ACTUAL)' : ''}
-                            </td>
-                            <td style="padding: 5px; text-align: right;">${tiempo.toFixed(2)} pasos</td>
-                        </tr>`;
-                    });
-                    html += `</table>`;
-                    
-                    html += `<h5 style="margin-top: 15px; color: #0A0A0A;">Probabilidad Final de Completar Compra (Absorcion):</h5>`;
-                    html += `<table style="width: 100%; margin: 10px 0;">`;
-                    analisisFundamental.probabilidades.forEach((prob, i) => {
-                        const esEstadoActual = i === estadoInicialIdx;
-                        html += `<tr><td style="padding: 5px;">
-                            Desde ${estados[i]}: ${esEstadoActual ? '(TU ESTADO ACTUAL)' : ''}
-                            </td>
-                            <td style="padding: 5px; text-align: right;">${(prob * 100).toFixed(2)}%</td>
-                        </tr>`;
-                    });
-                    html += `</table>`;
-                    html += `</div>`;
-                } else if (estadoInicialIdx === 4) {
-                    html += `<div class="analysis-box">`;
-                    html += `<h4>Estado Absorbente</h4>`;
-                    html += `<p>Ya estas en el estado Compra Completada (F), que es un estado absorbente.</p>`;
-                    html += `<p>La probabilidad de permanecer en F despues de cualquier numero de pasos es del 100%.</p>`;
-                    html += `</div>`;
-                }
-                
-                // Analisis adicional
-                html += `<div class="result-item">`;
-                html += `<h4>Analisis Matematico Detallado:</h4>`;
-                html += `<p style="margin: 5px 0;">1. Probabilidad de compra en ${nPasos} pasos desde ${estados[estadoInicialIdx]}: ${(distribNorm[4] * 100).toFixed(2)}%</p>`;
-                
-                // Calcular probabilidades de compra desde cada estado inicial
-                html += `<p style="margin: 10px 0 5px 0;">2. Prob. de compra despues de ${nPasos} pasos desde cada estado:</p>`;
-                
-                // Crear todas las distribuciones iniciales posibles
                 for (let i = 0; i < 5; i++) {
-                    const pi_inicial_i = [0, 0, 0, 0, 0];
-                    pi_inicial_i[i] = 1;
-                    const pi_n_i = multiplicarVectorMatriz(pi_inicial_i, Pn);
-                    const esEstadoActual = i === estadoInicialIdx;
-                    
-                    html += `<p style="margin: 2px 0 2px 20px; ${esEstadoActual ? 'color: #666;' : ''}">`;
-                    html += `${estados[i]}: ${(pi_n_i[4] * 100).toFixed(2)}%`;
-                    if (esEstadoActual) html += ` (TU ESTADO ACTUAL)`;
-                    html += `</p>`;
+                    html += `<tr><th style="background: #f0f0f0; color: #0A0A0A;">${estadosCodigo[i]}</th>`;
+                    for (let j = 0; j < 5; j++) {
+                        const valor = P[i][j];
+                        // Resaltar fila F si es absorbente
+                        const estilo = i === 4 && esAbsorbenteF && j === 4 ? 'background: #e8f5e9; font-weight: bold;' : '';
+                        html += `<td style="${estilo}">${valor.toFixed(2)}</td>`;
+                    }
+                    html += `</tr>`;
                 }
+                tbody.innerHTML = html;
                 
-                // Estado transitorio mas probable despues de n pasos
-                if (estadoInicialIdx < 4) { // Solo para estados transitorios
-                    const probabilidadesTransitorias = distribNorm.slice(0, 4);
-                    const maxProb = Math.max(...probabilidadesTransitorias);
-                    const maxIdx = probabilidadesTransitorias.indexOf(maxProb);
-                    if (maxProb > 0 && maxIdx !== estadoInicialIdx) {
-                        html += `<p style="margin: 5px 0;">3. Estado transitorio mas probable despues de ${nPasos} pasos: ${estados[maxIdx]} (${(maxProb * 100).toFixed(2)}%)</p>`;
+                // Actualizar texto de estado absorbente
+                const absorbentText = document.getElementById('absorbent-text');
+                const absorbentStatus = document.getElementById('absorbent-status');
+                if (esAbsorbenteF) {
+                    absorbentText.textContent = 'Es estado absorbente (P(F→F) = 1.0)';
+                    absorbentStatus.style.backgroundColor = '#e8f5e9';
+                } else {
+                    absorbentText.textContent = 'NO es estado absorbente (P(F→F) = ' + P[4][4].toFixed(2) + ')';
+                    absorbentStatus.style.backgroundColor = '#fff3cd';
+                }
+            }
+
+            function multiplicarVectorMatriz(vector, matriz) {
+                const resultado = [0, 0, 0, 0, 0];
+                for (let j = 0; j < 5; j++) {
+                    for (let i = 0; i < 5; i++) {
+                        resultado[j] += vector[i] * matriz[i][j];
                     }
                 }
-                
-                // Informacion de convergencia
-                if (nPasos >= 10 && estadoInicialIdx < 4) {
-                    html += `<p style="margin: 10px 0 5px 0; color: #666;">4. Convergencia: Con ${nPasos} pasos, la cadena converge hacia el estado absorbente F.</p>`;
-                }
-                
-                html += `</div>`;
-                
-                // Resumen ejecutivo
-                html += `<div class="summary-box">`;
-                html += `<h4>Resumen Ejecutivo</h4>`;
-                html += `<p style="margin: 5px 0;">• Usuario que comienza en ${estados[estadoInicialIdx]} tiene ${(distribNorm[4] * 100).toFixed(2)}% de probabilidad de comprar en ${nPasos} pasos</p>`;
-                
-                if (estadoInicialIdx < 4 && analisisFundamental) {
-                    html += `<p style="margin: 5px 0;">• Tiempo esperado hasta compra: ${analisisFundamental.tiempos[estadoInicialIdx].toFixed(2)} pasos</p>`;
-                }
-                
-                if (estadoInicialIdx < 4) {
-                    html += `<p style="margin: 5px 0;">• Estado absorbente F asegura que eventualmente todos los usuarios completen la compra (100%)</p>`;
-                } else {
-                    html += `<p style="margin: 5px 0;">• Ya has completado la compra. Estado absorbente garantiza que permanecerás en F.</p>`;
-                }
-                
-                html += `</div>`;
-                
-                contenido.innerHTML = html;
-                document.getElementById('resultados').classList.add('show');
-                
-                // Desplazar hacia los resultados
-                document.getElementById('resultados').scrollIntoView({ behavior: 'smooth' });
-            } catch (error) {
-                alert('Error en el calculo: ' + error.message);
-                console.error(error);
+                return resultado;
             }
-        }
 
-        // Inicializar al cargar
-        window.onload = function() {
-            actualizarDisplay();
-            actualizarDistribucionInicial();
-        };
-    </script>
-</body>
-</html>
+            function multiplicarMatrices(A, B) {
+                const n = A.length;
+                const m = B[0].length;
+                const resultado = Array(n).fill(0).map(() => Array(m).fill(0));
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < m; j++) {
+                        for (let k = 0; k < B.length; k++) {
+                            resultado[i][j] += A[i][k] * B[k][j];
+                        }
+                    }
+                }
+                return resultado;
+            }
+
+            function potenciaMatriz(matriz, n) {
+                if (n === 1) return matriz.map(fila => [...fila]);
+                if (n % 2 === 0) {
+                    const mitad = potenciaMatriz(matriz, n/2);
+                    return multiplicarMatrices(mitad, mitad);
+                } else {
+                    const menosUno = potenciaMatriz(matriz, n-1);
+                    return multiplicarMatrices(matriz, menosUno);
+                }
+            }
+
+            function calcularProbabilidades() {
+                const nPasos = parseInt(document.getElementById('num-pasos').value);
+                const estadoInicialIdx = parseInt(document.getElementById('estado-inicial').value);
+                
+                if (nPasos < 1 || nPasos > 100) {
+                    alert('Por favor ingrese un número entre 1 y 100');
+                    return;
+                }
+
+                try {
+                    const Pn = potenciaMatriz(P, nPasos);
+                    const pi0 = [0, 0, 0, 0, 0];
+                    pi0[estadoInicialIdx] = 1;
+                    const distribucion = multiplicarVectorMatriz(pi0, Pn);
+                    const suma = distribucion.reduce((a, b) => a + b, 0);
+                    const distribNorm = suma > 0 ? distribucion.map(p => p / suma) : distribucion;
+
+                    mostrarResultados(nPasos, estadoInicialIdx, pi0, Pn, distribNorm);
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+
+            function mostrarResultados(nPasos, estadoInicialIdx, pi0, Pn, distribNorm) {
+                let html = `<div class="highlight-box">
+                    <h4>Configuración</h4>
+                    <p><strong>Estado inicial:</strong> ${estados[estadoInicialIdx]}</p>
+                    <p><strong>π(0):</strong> [${pi0.join(', ')}]</p>
+                    <p><strong>Pasos:</strong> ${nPasos}</p>
+                    <p><strong>Estado F:</strong> ${esAbsorbenteF ? 'Absorbente' : 'Transitorio'}</p>
+                </div>`;
+                
+                html += `<div class="result-item">
+                    <h4>Matriz P^${nPasos}:</h4>
+                    <table style="font-size: 12px; margin: 10px 0;">
+                    <tr><th>De\\A</th><th>E</th><th>V</th><th>C</th><th>R</th><th>F</th></tr>`;
+                for (let i = 0; i < 5; i++) {
+                    html += `<tr><th>${estadosCodigo[i]}</th>`;
+                    for (let j = 0; j < 5; j++) {
+                        const valor = Pn[i][j];
+                        const estilo = i === 4 && esAbsorbenteF && j === 4 ? 'background: #e8f5e9; font-weight: bold;' : '';
+                        html += `<td style="${estilo}">${valor.toFixed(4)}</td>`;
+                    }
+                    html += `</tr>`;
+                }
+                html += `</table></div>`;
+                
+                html += `<div class="result-item"><h4>Distribución π(${nPasos}):</h4><div class="estado-grid">`;
+                for (let i = 0; i < 5; i++) {
+                    const estilo = i === 4 && esAbsorbenteF ? 'border-color: #4caf50; background: #f1f8e9;' : '';
+                    html += `<div class="estado-item" style="${estilo}"><h4>${estados[i]}</h4>
+                        <p class="prob-label">${(distribNorm[i] * 100).toFixed(2)}%</p>
+                        <small>π[${i}] = ${distribNorm[i].toFixed(6)}</small></div>`;
+                }
+                html += `</div></div>`;
+                
+                // Análisis especial si F es absorbente
+                if (esAbsorbenteF) {
+                    html += `<div class="analysis-box"><h4>Análisis de Estado Absorbente</h4>
+                        <p>Como F es absorbente, a largo plazo toda la probabilidad converge a F.</p>
+                        <p>Probabilidad de compra después de ${nPasos} pasos: <strong>${(distribNorm[4] * 100).toFixed(2)}%</strong></p>
+                        <p>Los estados E, V, C, R son transitorios y eventualmente se abandonan.</p>
+                    </div>`;
+                } else {
+                    html += `<div class="analysis-box"><h4>Análisis de Estado Transitorio</h4>
+                        <p>Como F NO es absorbente, es posible salir del estado de compra completada.</p>
+                        <p>Esto modela usuarios que después de comprar pueden volver a explorar.</p>
+                        <p>Distribución estacionaria no trivial (no todo converge a F).</p>
+                    </div>`;
+                }
+                
+                html += `<div class="summary-box"><h4>Resumen</h4>
+                    <p>Usuario en ${estados[estadoInicialIdx]} tiene ${(distribNorm[4] * 100).toFixed(2)}% de prob. de comprar en ${nPasos} pasos</p>
+                </div>`;
+                
+                document.getElementById('contenido-resultados').innerHTML = html;
+                document.getElementById('resultados').classList.add('show');
+                document.getElementById('resultados').scrollIntoView({ behavior: 'smooth' });
+            }
+
+            window.onload = function() {
+                // Primero cargar matriz editada si existe
+                const matrizCargada = cargarMatrizEditada();
+                
+                // Luego actualizar display
+                actualizarDisplay();
+                actualizarDistribucionInicial();
+                
+                if (matrizCargada) {
+                    console.log('Página cargada con matriz editada');
+                } else {
+                    console.log('Página cargada con matriz por defecto');
+                }
+            };
+        </script>
+    </body>
+    </html>

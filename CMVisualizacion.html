@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización Cadena de Markov</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1800px; margin: 0 auto; background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #0a0a0a; margin-bottom: 5px; font-size: 24px; text-align: center; }
+        .subtitle { color: #666; margin-bottom: 20px; text-align: center; font-size: 14px; }
+        .buttons-container { margin-bottom: 20px; text-align: center; }
+        .btn-back { display: inline-block; padding: 10px 20px; background: #666; color: white; text-decoration: none; border-radius: 4px; font-size: 14px; margin-right: 10px; }
+        .btn-back:hover { background: #555; }
+        .btn-download { display: inline-block; padding: 10px 20px; background: #0a0a0a; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; }
+        .btn-download:hover { background: #333; }
+        .visualization-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0; }
+        @media (max-width: 1200px) { .visualization-grid { grid-template-columns: 1fr; } }
+        .viz-panel { background: white; border: 2px solid #ddd; border-radius: 8px; padding: 20px; overflow: hidden; }
+        .viz-panel h2 { color: #0a0a0a; margin-bottom: 20px; font-size: 18px; text-align: center; }
+        canvas { display: block; margin: 0 auto; }
+        .legend { margin-top: 25px; padding: 15px; background: #f9f9f9; border-radius: 5px; }
+        .legend h3 { color: #0a0a0a; margin-bottom: 10px; font-size: 16px; }
+        .legend-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+        .legend-color { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #333; flex-shrink: 0; }
+        .info-message {
+            background: #e8f5e9;
+            color: #0a0a0a;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #0a0a0a;
+        }
+        .matrix-display {
+            margin: 20px auto;
+            border-collapse: collapse;
+            font-size: 14px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .matrix-display th, .matrix-display td {
+            padding: 12px;
+            text-align: center;
+            border: 2px solid #ddd;
+            min-width: 80px;
+            height: 60px;
+        }
+        .matrix-display th {
+            background: #f8f8f8;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .matrix-display td {
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .color-scale {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        .color-scale-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="buttons-container">
+            <a href="index.html" class="btn-back" id="btn-volver">Volver al Inicio</a>
+            <button onclick="descargarVisualizacion()" class="btn-download">Descargar PNG</button>
+        </div>
+        
+        <h1>Cadena de Markov: Comportamiento en Compras Online</h1>
+        <p class="subtitle">Visualización completa de la red y matriz de transición</p>
+
+        <div id="info-message-container"></div>
+
+        <div class="visualization-grid">
+            <div class="viz-panel">
+                <h2>Diagrama de la Cadena de Markov</h2>
+                <canvas id="network-diagram" width="900" height="700"></canvas>
+            </div>
+
+            <div class="viz-panel">
+                <h2>Matriz de Transición P</h2>
+                <div style="overflow-x: auto;">
+                    <table class="matrix-display" id="matrix-table">
+                        <!-- La matriz se generará dinámicamente -->
+                    </table>
+                </div>
+                <div class="color-scale" id="color-scale">
+                    <!-- La escala de colores se generará dinámicamente -->
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <h3>Leyenda de Estados</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #90EE90;"></div>
+                    <span>Explorando (E) - Verde claro</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #87CEEB;"></div>
+                    <span>Viendo Producto (V) - Azul cielo</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FFFACD;"></div>
+                    <span>Comparando (C) - Amarillo claro</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FFB6C1;"></div>
+                    <span>En Carrito (R) - Rosa claro</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #DDA0DD;"></div>
+                    <span>Compra Completada (F) - Violeta (Absorbente)</span>
+                </div>
+            </div>
+            <p style="margin-top: 15px; color: #666; font-size: 13px;">
+                • Grosor de las flechas proporcional a la probabilidad de transición<br>
+                • Línea azul punteada en la matriz separa estados transitorios (E,V,C,R) del absorbente (F)<br>
+                • Valores en rojo oscuro indican probabilidad 1.0 (estado absorbente)<br>
+                • Valores en gris claro indican probabilidad 0.0
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Matriz por defecto
+        const P_POR_DEFECTO = [
+            [0.20, 0.40, 0.20, 0.15, 0.05],
+            [0.10, 0.30, 0.25, 0.25, 0.10],
+            [0.05, 0.25, 0.30, 0.30, 0.10],
+            [0.00, 0.10, 0.15, 0.50, 0.25],
+            [0.00, 0.00, 0.00, 0.00, 1.00]
+        ];
+
+        // Variable global P que puede ser modificada
+        let P = [...P_POR_DEFECTO.map(row => [...row])];
+
+        const estados = ['Explorando', 'Viendo Producto', 'Comparando', 'En Carrito', 'Compra Completada'];
+        const estadosCortos = ['E', 'V', 'C', 'R', 'F'];
+        
+        // Colores más opacos y suaves
+        const coloresNodos = ['#90EE90', '#87CEEB', '#FFFACD', '#FFB6C1', '#DDA0DD']; // Verde claro, Azul cielo, Amarillo claro, Rosa claro, Violeta
+        const coloresBordes = ['#32CD32', '#1E90FF', '#FFD700', '#FF69B4', '#9370DB']; // Limegreen, Dodgerblue, Gold, Hotpink, Mediumpurple
+
+        // Cargar matriz editada desde localStorage si existe
+        function cargarMatrizEditada() {
+            const matrizGuardada = localStorage.getItem('markovMatrix');
+            if (matrizGuardada) {
+                try {
+                    const matrizCargada = JSON.parse(matrizGuardada);
+                    // Copiar valores a P
+                    for (let i = 0; i < 5; i++) {
+                        for (let j = 0; j < 5; j++) {
+                            P[i][j] = matrizCargada[i][j];
+                        }
+                    }
+                    console.log('Matriz cargada desde localStorage:', P);
+                    
+                    // Mostrar mensaje al usuario
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'info-message';
+                    infoDiv.textContent = '✓ Visualización actualizada con las probabilidades editadas';
+                    document.getElementById('info-message-container').appendChild(infoDiv);
+                    
+                    setTimeout(() => infoDiv.remove(), 5000);
+                    
+                    return true;
+                } catch (e) {
+                    console.error('Error al cargar matriz:', e);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        // Función para borrar la matriz editada
+        function borrarMatrizEditada() {
+            localStorage.removeItem('markovMatrix');
+            console.log('Matriz editada eliminada de localStorage');
+        }
+
+        // ============================================================================
+        // DIAGRAMA DE RED MEJORADO - ETIQUETAS BIEN ORGANIZADAS
+        // ============================================================================
+
+        function dibujarDiagramaRed() {
+            const canvas = document.getElementById('network-diagram');
+            const ctx = canvas.getContext('2d');
+            
+            // Limpiar canvas
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Posiciones de los nodos (similar a un layout circular)
+            const centroX = 450;
+            const centroY = 350;
+            const radio = 250;
+            const posiciones = [];
+            
+            // Distribuir nodos en círculo
+            for (let i = 0; i < 5; i++) {
+                const angulo = (i * 2 * Math.PI / 5) - Math.PI/2;
+                const x = centroX + radio * Math.cos(angulo);
+                const y = centroY + radio * Math.sin(angulo);
+                posiciones.push({ x, y });
+            }
+
+            // Primero dibujar todas las aristas (para que queden detrás de los nodos)
+            // Vamos a dibujar las aristas en un orden específico para organizar mejor las etiquetas
+            
+            // Primero dibujar las aristas con probabilidades más bajas
+            const aristas = [];
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const prob = P[i][j];
+                    if (prob > 0.0001 && i !== j) {
+                        aristas.push({ i, j, prob });
+                    }
+                }
+            }
+            
+            // Ordenar por probabilidad (de menor a mayor)
+            aristas.sort((a, b) => a.prob - b.prob);
+            
+            // Dibujar aristas ordenadas
+            for (const arista of aristas) {
+                const { i, j, prob } = arista;
+                const inicio = posiciones[i];
+                const fin = posiciones[j];
+                
+                // Calcular posición de etiqueta
+                const labelPos = calcularPosicionEtiquetaSimple(inicio, fin, i, j);
+                dibujarAristaConCurva(ctx, inicio.x, inicio.y, fin.x, fin.y, prob, i, j, labelPos);
+            }
+            
+            // Dibujar self-loops después (para que queden sobre las aristas)
+            for (let i = 0; i < 5; i++) {
+                const prob = P[i][i];
+                if (prob > 0.0001) {
+                    const pos = posiciones[i];
+                    // Self-loop en posición específica según el nodo
+                    const anguloNodo = Math.atan2(pos.y - centroY, pos.x - centroX);
+                    const offsetX = Math.cos(anguloNodo) * 40;
+                    const offsetY = Math.sin(anguloNodo) * 40;
+                    dibujarSelfLoop(ctx, pos.x, pos.y, prob, i, offsetX, offsetY);
+                }
+            }
+
+            // Luego dibujar los nodos (encima de todo)
+            for (let i = 0; i < 5; i++) {
+                const pos = posiciones[i];
+                
+                // Círculo del nodo (tamaño moderado)
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 50, 0, 2 * Math.PI);
+                ctx.fillStyle = coloresNodos[i];
+                ctx.fill();
+                ctx.strokeStyle = coloresBordes[i];
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Símbolo del estado (letra)
+                ctx.fillStyle = '#0a0a0a';
+                ctx.font = 'bold 36px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(estadosCortos[i], pos.x, pos.y);
+                
+                // Nombre del estado completo debajo
+                ctx.font = 'bold 14px Arial';
+                ctx.fillStyle = '#333';
+                
+                const palabras = estados[i].split(' ');
+                const offsetY = 70;
+                
+                if (palabras.length > 1) {
+                    ctx.fillText(palabras[0], pos.x, pos.y + offsetY - 8);
+                    ctx.fillText(palabras.slice(1).join(' '), pos.x, pos.y + offsetY + 8);
+                } else {
+                    ctx.fillText(estados[i], pos.x, pos.y + offsetY);
+                }
+            }
+
+            // Título
+            ctx.fillStyle = '#0a0a0a';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Diagrama de la Cadena de Markov', 450, 40);
+            
+            // Leyenda de grosor de flechas
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#666';
+            ctx.fillText('Grosor de flechas = probabilidad de transición', 450, 670);
+        }
+
+        function calcularPosicionEtiquetaSimple(inicio, fin, i, j) {
+            // Posición básica en el centro de la arista con pequeño desplazamiento
+            const midX = (inicio.x + fin.x) / 2;
+            const midY = (inicio.y + fin.y) / 2;
+            
+            // Desplazamiento perpendicular
+            const dx = fin.x - inicio.x;
+            const dy = fin.y - inicio.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const perpX = -dy / dist * 30;
+            const perpY = dx / dist * 30;
+            
+            // Para evitar superposiciones, alternar desplazamiento basado en los índices
+            const alternar = (i + j) % 2 === 0 ? 1 : -1;
+            
+            return {
+                x: midX + perpX * alternar,
+                y: midY + perpY * alternar,
+                angulo: Math.atan2(dy, dx)
+            };
+        }
+
+        function dibujarAristaConCurva(ctx, x1, y1, x2, y2, prob, i, j, labelPos) {
+            // Calcular grosor proporcional
+            const grosor = Math.max(1, prob * 8);
+            const opacidad = Math.max(0.4, prob);
+            
+            // Acortar para no tocar los círculos (radio 50)
+            const angulo = Math.atan2(y2 - y1, x2 - x1);
+            const radio = 50;
+            const xInicio = x1 + radio * Math.cos(angulo);
+            const yInicio = y1 + radio * Math.sin(angulo);
+            const xFin = x2 - radio * Math.cos(angulo);
+            const yFin = y2 - radio * Math.sin(angulo);
+            
+            // Dibujar línea con curva
+            ctx.strokeStyle = `rgba(80, 80, 80, ${opacidad})`;
+            ctx.lineWidth = grosor;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            
+            // Curva suave
+            const dx = xFin - xInicio;
+            const dy = yFin - yInicio;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const curvatura = 0.1;
+            const perpX = -dy / dist * curvatura * dist;
+            const perpY = dx / dist * curvatura * dist;
+            const cpX = (xInicio + xFin) / 2 + perpX;
+            const cpY = (yInicio + yFin) / 2 + perpY;
+            
+            ctx.moveTo(xInicio, yInicio);
+            ctx.quadraticCurveTo(cpX, cpY, xFin, yFin);
+            ctx.stroke();
+            
+            // Dibujar flecha
+            const anguloFlecha = Math.atan2(yFin - cpY, xFin - cpX);
+            const tamañoFlecha = Math.max(8, grosor * 1.2);
+            ctx.fillStyle = `rgba(80, 80, 80, ${opacidad})`;
+            ctx.beginPath();
+            ctx.moveTo(xFin, yFin);
+            ctx.lineTo(
+                xFin - tamañoFlecha * Math.cos(anguloFlecha - Math.PI / 6),
+                yFin - tamañoFlecha * Math.sin(anguloFlecha - Math.PI / 6)
+            );
+            ctx.lineTo(
+                xFin - tamañoFlecha * Math.cos(anguloFlecha + Math.PI / 6),
+                yFin - tamañoFlecha * Math.sin(anguloFlecha + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fill();
+            
+            // Etiqueta de probabilidad
+            const text = prob.toFixed(3);
+            ctx.font = 'bold 14px Arial';
+            const textWidth = ctx.measureText(text).width;
+            const padding = 6;
+            
+            // Fondo semitransparente para la etiqueta
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillRect(labelPos.x - textWidth/2 - padding, labelPos.y - 12, textWidth + padding*2, 24);
+            
+            // Borde de la etiqueta
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(labelPos.x - textWidth/2 - padding, labelPos.y - 12, textWidth + padding*2, 24);
+            
+            // Texto de probabilidad
+            ctx.fillStyle = prob > 0.5 ? '#B22222' : '#0a0a0a';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, labelPos.x, labelPos.y);
+        }
+
+        function dibujarSelfLoop(ctx, x, y, prob, estadoIdx, offsetX, offsetY) {
+            const grosor = Math.max(1, prob * 8);
+            const radio = 35;
+            
+            // Color del self-loop según el estado
+            const color = coloresBordes[estadoIdx];
+            const opacidad = Math.max(0.4, prob);
+            
+            ctx.strokeStyle = `rgba(${parseInt(color.slice(1,3), 16)}, ${parseInt(color.slice(3,5), 16)}, ${parseInt(color.slice(5,7), 16)}, ${opacidad})`;
+            ctx.lineWidth = grosor;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(x + offsetX, y + offsetY, radio, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Etiqueta del self-loop
+            const text = prob.toFixed(3);
+            ctx.font = 'bold 14px Arial';
+            const textWidth = ctx.measureText(text).width;
+            const padding = 5;
+            
+            // Posición de la etiqueta (fuera del self-loop)
+            const labelX = x + offsetX;
+            const labelY = y + offsetY - radio - 20;
+            
+            // Fondo para la etiqueta
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillRect(labelX - textWidth/2 - padding, labelY - 10, textWidth + padding*2, 20);
+            
+            // Borde de la etiqueta
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(labelX - textWidth/2 - padding, labelY - 10, textWidth + padding*2, 20);
+            
+            // Texto
+            ctx.fillStyle = prob > 0.5 ? '#B22222' : '#0a0a0a';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, labelX, labelY);
+        }
+
+        // ============================================================================
+        // MATRIZ DE TRANSICIÓN (MISMA QUE ANTES)
+        // ============================================================================
+
+        function generarMatrizTabla() {
+            const table = document.getElementById('matrix-table');
+            let html = '';
+            
+            // Encabezado
+            html += '<thead><tr>';
+            html += '<th style="background: #f0f0f0; color: #0a0a0a; font-size: 16px;">Desde \\ Hacia</th>';
+            for (let j = 0; j < 5; j++) {
+                html += `<th style="background: ${coloresNodos[j]}; color: #0a0a0a; font-size: 16px;">${estadosCortos[j]}</th>`;
+            }
+            html += '<th style="background: #f0f0f0; color: #0a0a0a; font-size: 16px;">SUMA</th>';
+            html += '</tr></thead>';
+            
+            // Filas
+            html += '<tbody>';
+            for (let i = 0; i < 5; i++) {
+                html += `<tr>`;
+                html += `<td style="background: ${coloresNodos[i]}; font-weight: bold; font-size: 16px;">${estadosCortos[i]}</td>`;
+                
+                let suma = 0;
+                for (let j = 0; j < 5; j++) {
+                    const prob = P[i][j];
+                    suma += prob;
+                    
+                    // Color basado en probabilidad
+                    let colorFondo, colorTexto;
+                    
+                    if (prob === 1.0) {
+                        colorFondo = '#8B0000'; // Rojo oscuro para estado absorbente
+                        colorTexto = 'white';
+                    } else if (prob === 0.0) {
+                        colorFondo = '#F8F8F8';
+                        colorTexto = '#888';
+                    } else {
+                        // Escala suave de azul claro a rojo claro
+                        const r = Math.min(255, Math.floor(200 + 55 * prob));
+                        const g = Math.min(255, Math.floor(230 * (1 - prob * 0.7)));
+                        const b = Math.min(255, Math.floor(230 * (1 - prob)));
+                        colorFondo = `rgb(${r}, ${g}, ${b})`;
+                        colorTexto = prob > 0.5 ? 'white' : '#0a0a0a';
+                    }
+                    
+                    html += `<td style="background: ${colorFondo}; color: ${colorTexto}; font-size: 16px;">`;
+                    html += prob.toFixed(3);
+                    html += '</td>';
+                }
+                
+                // Columna de suma
+                const sumaStyle = Math.abs(suma - 1.0) > 0.001 ? 
+                    'background: #FFE4E1; color: #B22222; font-weight: bold;' : 
+                    'background: #F0F8FF; color: #0a0a0a; font-weight: bold;';
+                
+                html += `<td style="${sumaStyle} font-size: 16px;">`;
+                html += suma.toFixed(3);
+                html += '</td>';
+                
+                html += '</tr>';
+                
+                // Línea separadora después del estado R (antes de F)
+                if (i === 3) {
+                    html += `<tr><td colspan="7" style="border-top: 3px dashed #1E90FF; height: 3px; background: #F0F8FF;"></td></tr>`;
+                }
+            }
+            html += '</tbody>';
+            
+            table.innerHTML = html;
+            
+            // Generar escala de colores
+            generarEscalaColores();
+        }
+
+        function generarEscalaColores() {
+            const scaleContainer = document.getElementById('color-scale');
+            let html = '<span class="color-scale-label">0.0</span>';
+            
+            // Crear gradiente lineal para la barra de colores
+            const gradientColors = [];
+            for (let i = 0; i <= 10; i++) {
+                const prob = i / 10;
+                const r = Math.min(255, Math.floor(200 + 55 * prob));
+                const g = Math.min(255, Math.floor(230 * (1 - prob * 0.7)));
+                const b = Math.min(255, Math.floor(230 * (1 - prob)));
+                gradientColors.push(`rgb(${r}, ${g}, ${b})`);
+            }
+            
+            // Crear barra de gradiente
+            html += '<div style="display: flex; height: 30px; border: 1px solid #ccc; border-radius: 3px;">';
+            gradientColors.forEach(color => {
+                html += `<div style="flex: 1; background: ${color};"></div>`;
+            });
+            html += '</div>';
+            
+            html += '<span class="color-scale-label">1.0</span>';
+            html += '<div style="margin-left: 30px; display: flex; align-items: center; gap: 10px;">';
+            html += '<div style="width: 25px; height: 25px; background: #8B0000; border: 1px solid #ccc;"></div>';
+            html += '<span style="color: #666; font-size: 13px;">Estado absorbente (1.0)</span>';
+            html += '</div>';
+            
+            scaleContainer.innerHTML = html;
+        }
+
+        function descargarVisualizacion() {
+            // Crear un canvas temporal
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 1800;
+            tempCanvas.height = 900;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Fondo blanco
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Guardar contexto actual
+            const savedP = [...P.map(row => [...row])];
+            
+            // Dibujar diagrama de red (izquierda)
+            const centroX = 450;
+            const centroY = 400;
+            const radio = 250;
+            const posiciones = [];
+            
+            // Distribuir nodos en círculo
+            for (let i = 0; i < 5; i++) {
+                const angulo = (i * 2 * Math.PI / 5) - Math.PI/2;
+                const x = centroX + radio * Math.cos(angulo);
+                const y = centroY + radio * Math.sin(angulo);
+                posiciones.push({ x, y });
+            }
+            
+            // Primero dibujar aristas
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const prob = P[i][j];
+                    if (prob > 0.0001 && i !== j) {
+                        const inicio = posiciones[i];
+                        const fin = posiciones[j];
+                        
+                        const angulo = Math.atan2(fin.y - inicio.y, fin.x - inicio.x);
+                        const radioNodo = 50;
+                        const xInicio = inicio.x + radioNodo * Math.cos(angulo);
+                        const yInicio = inicio.y + radioNodo * Math.sin(angulo);
+                        const xFin = fin.x - radioNodo * Math.cos(angulo);
+                        const yFin = fin.y - radioNodo * Math.sin(angulo);
+                        
+                        tempCtx.strokeStyle = `rgba(80, 80, 80, ${Math.max(0.4, prob)})`;
+                        tempCtx.lineWidth = Math.max(1, prob * 8);
+                        tempCtx.beginPath();
+                        
+                        const dx = xFin - xInicio;
+                        const dy = yFin - yInicio;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const curvatura = 0.1;
+                        const perpX = -dy / dist * curvatura * dist;
+                        const perpY = dx / dist * curvatura * dist;
+                        const cpX = (xInicio + xFin) / 2 + perpX;
+                        const cpY = (yInicio + yFin) / 2 + perpY;
+                        
+                        tempCtx.moveTo(xInicio, yInicio);
+                        tempCtx.quadraticCurveTo(cpX, cpY, xFin, yFin);
+                        tempCtx.stroke();
+                    }
+                }
+            }
+            
+            // Dibujar self-loops
+            for (let i = 0; i < 5; i++) {
+                const prob = P[i][i];
+                if (prob > 0.0001) {
+                    const pos = posiciones[i];
+                    const anguloNodo = Math.atan2(pos.y - centroY, pos.x - centroX);
+                    const offsetX = Math.cos(anguloNodo) * 40;
+                    const offsetY = Math.sin(anguloNodo) * 40;
+                    
+                    tempCtx.strokeStyle = `rgba(80, 80, 80, ${Math.max(0.4, prob)})`;
+                    tempCtx.lineWidth = Math.max(1, prob * 8);
+                    tempCtx.beginPath();
+                    tempCtx.arc(pos.x + offsetX, pos.y + offsetY, 35, 0, 2 * Math.PI);
+                    tempCtx.stroke();
+                }
+            }
+            
+            // Dibujar nodos
+            for (let i = 0; i < 5; i++) {
+                const pos = posiciones[i];
+                
+                tempCtx.beginPath();
+                tempCtx.arc(pos.x, pos.y, 50, 0, 2 * Math.PI);
+                tempCtx.fillStyle = coloresNodos[i];
+                tempCtx.fill();
+                tempCtx.strokeStyle = coloresBordes[i];
+                tempCtx.lineWidth = 3;
+                tempCtx.stroke();
+                
+                tempCtx.fillStyle = '#0a0a0a';
+                tempCtx.font = 'bold 36px Arial';
+                tempCtx.textAlign = 'center';
+                tempCtx.textBaseline = 'middle';
+                tempCtx.fillText(estadosCortos[i], pos.x, pos.y);
+            }
+            
+            // Título del diagrama
+            tempCtx.fillStyle = '#0a0a0a';
+            tempCtx.font = 'bold 28px Arial';
+            tempCtx.fillText('Diagrama de la Cadena de Markov', 450, 80);
+            
+            // Dibujar matriz (derecha)
+            const startX = 950;
+            const startY = 100;
+            const cellSize = 100;
+            
+            // Encabezados
+            tempCtx.font = 'bold 28px Arial';
+            tempCtx.fillStyle = '#0a0a0a';
+            tempCtx.fillText('Matriz de Transición P', startX + 250, 80);
+            
+            // Encabezados de columnas
+            tempCtx.font = 'bold 20px Arial';
+            for (let j = 0; j < 5; j++) {
+                tempCtx.fillStyle = coloresNodos[j];
+                tempCtx.fillRect(startX + (j+1) * cellSize, startY, cellSize, cellSize);
+                tempCtx.strokeStyle = '#0a0a0a';
+                tempCtx.lineWidth = 2;
+                tempCtx.strokeRect(startX + (j+1) * cellSize, startY, cellSize, cellSize);
+                tempCtx.fillStyle = '#0a0a0a';
+                tempCtx.textAlign = 'center';
+                tempCtx.textBaseline = 'middle';
+                tempCtx.fillText(estadosCortos[j], startX + (j+1) * cellSize + cellSize/2, startY + cellSize/2);
+            }
+            
+            // Encabezados de filas y celdas
+            for (let i = 0; i < 5; i++) {
+                // Encabezado de fila
+                tempCtx.fillStyle = coloresNodos[i];
+                tempCtx.fillRect(startX, startY + (i+1) * cellSize, cellSize, cellSize);
+                tempCtx.strokeStyle = '#0a0a0a';
+                tempCtx.strokeRect(startX, startY + (i+1) * cellSize, cellSize, cellSize);
+                tempCtx.fillStyle = '#0a0a0a';
+                tempCtx.fillText(estadosCortos[i], startX + cellSize/2, startY + (i+1) * cellSize + cellSize/2);
+                
+                // Celdas de la matriz
+                for (let j = 0; j < 5; j++) {
+                    const prob = P[i][j];
+                    
+                    let colorFondo, colorTexto;
+                    if (prob === 1.0) {
+                        colorFondo = '#8B0000';
+                        colorTexto = 'white';
+                    } else if (prob === 0.0) {
+                        colorFondo = '#F8F8F8';
+                        colorTexto = '#888';
+                    } else {
+                        const r = Math.min(255, Math.floor(200 + 55 * prob));
+                        const g = Math.min(255, Math.floor(230 * (1 - prob * 0.7)));
+                        const b = Math.min(255, Math.floor(230 * (1 - prob)));
+                        colorFondo = `rgb(${r}, ${g}, ${b})`;
+                        colorTexto = prob > 0.5 ? 'white' : '#0a0a0a';
+                    }
+                    
+                    tempCtx.fillStyle = colorFondo;
+                    tempCtx.fillRect(startX + (j+1) * cellSize, startY + (i+1) * cellSize, cellSize, cellSize);
+                    tempCtx.strokeStyle = '#0a0a0a';
+                    tempCtx.strokeRect(startX + (j+1) * cellSize, startY + (i+1) * cellSize, cellSize, cellSize);
+                    
+                    tempCtx.fillStyle = colorTexto;
+                    tempCtx.font = 'bold 18px Arial';
+                    tempCtx.fillText(prob.toFixed(3), startX + (j+1) * cellSize + cellSize/2, startY + (i+1) * cellSize + cellSize/2);
+                }
+                
+                // Línea separadora después del estado R
+                if (i === 3) {
+                    tempCtx.strokeStyle = '#1E90FF';
+                    tempCtx.lineWidth = 3;
+                    tempCtx.setLineDash([10, 5]);
+                    tempCtx.beginPath();
+                    tempCtx.moveTo(startX, startY + (i+2) * cellSize - 1);
+                    tempCtx.lineTo(startX + 6 * cellSize, startY + (i+2) * cellSize - 1);
+                    tempCtx.stroke();
+                    tempCtx.setLineDash([]);
+                }
+            }
+            
+            // Restaurar contexto
+            P = savedP;
+            
+            // Descargar
+            const link = document.createElement('a');
+            link.download = 'cadena_markov_completa.png';
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Función para actualizar la visualización
+        function actualizarVisualizacion() {
+            dibujarDiagramaRed();
+            generarMatrizTabla();
+        }
+
+        // Función para manejar la navegación y borrar la matriz
+        function manejarNavegacion() {
+            borrarMatrizEditada();
+            return true;
+        }
+
+        window.onload = function() {
+            // Cargar matriz editada primero
+            const matrizCargada = cargarMatrizEditada();
+            
+            // Luego dibujar
+            actualizarVisualizacion();
+            
+            // Si se cargó matriz editada, mostrar mensaje
+            if (matrizCargada) {
+                console.log('Visualización actualizada con matriz editada');
+            }
+
+            // Configurar el botón "Volver al Inicio" para borrar la matriz
+            const btnVolver = document.getElementById('btn-volver');
+            if (btnVolver) {
+                btnVolver.addEventListener('click', manejarNavegacion);
+            }
+
+            // También borrar la matriz cuando el usuario cierre la página
+            window.addEventListener('beforeunload', borrarMatrizEditada);
+            window.addEventListener('unload', borrarMatrizEditada);
+        };
+    </script>
+</body>
+</html>
