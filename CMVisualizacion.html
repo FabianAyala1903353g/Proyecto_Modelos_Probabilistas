@@ -421,15 +421,11 @@
             const textWidth = ctx.measureText(text).width;
             const padding = 5;
             
-            // Posición de la etiqueta (fuera del self-loop)
+            //etiqueta
             const labelX = x + offsetX;
             const labelY = y + offsetY - radio - 20;
-            
-            // Fondo para la etiqueta
             ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
             ctx.fillRect(labelX - textWidth/2 - padding, labelY - 10, textWidth + padding*2, 20);
-            
-            // Borde de la etiqueta
             ctx.strokeStyle = '#666';
             ctx.lineWidth = 1;
             ctx.strokeRect(labelX - textWidth/2 - padding, labelY - 10, textWidth + padding*2, 20);
@@ -441,10 +437,7 @@
             ctx.fillText(text, labelX, labelY);
         }
 
-        // ============================================================================
-        // MATRIZ DE TRANSICIÓN (MISMA QUE ANTES)
-        // ============================================================================
-
+        // MATRIZ DE TRANSICIÓN
         function generarMatrizTabla() {
             const table = document.getElementById('matrix-table');
             let html = '';
